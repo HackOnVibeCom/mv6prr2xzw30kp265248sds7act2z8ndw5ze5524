@@ -1,4 +1,4 @@
-import type { SVGProps } from "react";
+import type { ReactElement, SVGProps } from "react";
 import type { Platform } from "@/lib/mockData";
 
 function Twitter(props: SVGProps<SVGSVGElement>) {
@@ -30,7 +30,7 @@ function LinkedIn(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-const map: Record<Platform, (p: SVGProps<SVGSVGElement>) => JSX.Element> = {
+const map: Record<Platform, (p: SVGProps<SVGSVGElement>) => ReactElement> = {
   Twitter,
   Reddit,
   WhatsApp,
