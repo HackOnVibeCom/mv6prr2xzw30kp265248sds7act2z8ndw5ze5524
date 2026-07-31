@@ -47,7 +47,7 @@ function Landing() {
     return () => clearInterval(t);
   }, []);
 
-  const preview = previews[index];
+  const preview = previews[index]!;
 
   return (
     <main className="mx-auto w-full max-w-5xl px-5 py-14 sm:py-20">

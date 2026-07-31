@@ -337,7 +337,7 @@ const eventTemplates: { type: string; payload: string }[] = [
 ];
 
 export function nextMockEvent(appId: string, seq: number): FeedEvent {
-  const t = eventTemplates[seq % eventTemplates.length];
+  const t = eventTemplates[seq % eventTemplates.length]!;
   const now = new Date();
   const ts = [now.getHours(), now.getMinutes(), now.getSeconds()]
     .map((n) => String(n).padStart(2, "0"))
