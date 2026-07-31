@@ -29,12 +29,28 @@ function LinkedIn(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+function Telegram(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.4 11.6c-1-.3-1-1 .2-1.5l19-7.3c.9-.3 1.6.2 1.3 1.5Z" />
+    </svg>
+  );
+}
+function Facebook(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.7-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12Z" />
+    </svg>
+  );
+}
 
 const map: Record<Platform, (p: SVGProps<SVGSVGElement>) => ReactElement> = {
   Twitter,
   Reddit,
   WhatsApp,
   LinkedIn,
+  Telegram,
+  Facebook,
 };
 
 export function PlatformIcon({ platform, className }: { platform: Platform; className?: string }) {
