@@ -1,12 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { apps } from "@/lib/mockData";
+import { toast } from "sonner";
+import { AppShell } from "@/components/AppShell";
+import { apps, totals } from "@/lib/mockData";
 
 export const Route = createFileRoute("/apps/")({
   head: () => ({
     meta: [
       { title: "Connected apps — AutoPromo SDK" },
-      { name: "description", content: "Every mobile app connected to AutoPromo, plus onboarding for a new one." },
+      {
+        name: "description",
+        content: "Every mobile app connected to AutoPromo, plus onboarding for a new one.",
+      },
       { property: "og:title", content: "Connected apps — AutoPromo SDK" },
       { property: "og:description", content: "Manage the apps sending product events to AutoPromo." },
     ],
@@ -18,38 +23,62 @@ function AppsPage() {
   const [adding, setAdding] = useState(false);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-5 py-12">
-      <Link
-        to="/"
-        className="text-sm font-medium text-green-500 hover:underline dark:text-mint-200"
-      >
-        ← AutoPromo SDK
-      </Link>
-      <h1 className="mt-4 font-display text-3xl font-bold">Connected apps</h1>
+    <AppShell title="Connected apps">
+      <h1 className="font-display text-3xl font-bold">Connected apps</h1>
       <p className="mt-2 text-sm text-muted-fg">
         Each app sends product events through the SDK. Pick one to see its generated posts.
       </p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[
+          { label: "Apps connected", value: totals.apps },
+          { label: "Posts generated", value: totals.generated },
+          { label: "Posts published", value: totals.published },
+          { label: "Total installs", value: totals.installs.toLocaleString() },
+        ].map((s) => (
+          <div key={s.label} className="rounded-xl border bg-surface p-4">
+            <p className="font-display text-xl font-bold">{s.value}</p>
+            <p className="mt-0.5 text-xs text-muted-fg">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {apps.map((app) => (
           <Link
             key={app.id}
             to="/apps/$appId"
             params={{ appId: app.id }}
-            className="ap-enter rounded-xl border bg-surface p-5 transition-colors hover:border-mint-400"
+            className="ap-enter flex flex-col rounded-xl border bg-surface p-5 transition-colors hover:border-mint-400"
           >
             <div className="flex items-center gap-2">
               <span
                 className={`h-2 w-2 shrink-0 rounded-full ${
-                  app.status === "active" ? "bg-green-300" : "bg-mint-300"
+                  app.status === "active"
+                    ? "bg-green-300"
+                    : app.status === "idle"
+                      ? "bg-olive-200"
+                      : "bg-amber-200"
                 }`}
                 aria-hidden="true"
               />
               <h2 className="truncate font-display text-base font-semibold">{app.name}</h2>
             </div>
             <p className="mt-2 text-sm leading-relaxed text-muted-fg">{app.description}</p>
+            <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
+              {[
+                ["Installs", app.installs.toLocaleString()],
+                ["Generated", app.postsGenerated],
+                ["Published", app.postsPublished],
+              ].map(([k, v]) => (
+                <div key={k as string} className="rounded-lg bg-mint-50 py-2 dark:bg-olive-500">
+                  <dd className="font-display text-sm font-semibold">{v}</dd>
+                  <dt className="text-[10px] text-muted-fg">{k}</dt>
+                </div>
+              ))}
+            </dl>
             <p className="mt-3 font-mono text-[11px] text-olive-300 dark:text-olive-200">
-              {app.status}
+              {app.status} · sdk {app.sdkVersion}
             </p>
           </Link>
         ))}
@@ -61,6 +90,7 @@ function AppsPage() {
               onSubmit={(e) => {
                 e.preventDefault();
                 setAdding(false);
+                toast.success("App connected", { description: "Drop the SDK in and send an event." });
               }}
             >
               <input
@@ -72,12 +102,25 @@ function AppsPage() {
                 placeholder="One-line description"
                 className="rounded-lg border bg-surface px-3 py-2 text-sm"
               />
-              <button
-                type="submit"
-                className="ap-press rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-              >
-                Connect app
-              </button>
+              <input
+                placeholder="https://yourapp.com"
+                className="rounded-lg border bg-surface px-3 py-2 text-sm"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="ap-press rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+                >
+                  Connect app
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdding(false)}
+                  className="rounded-lg border px-3 py-2 text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           ) : (
             <button
@@ -96,6 +139,6 @@ function AppsPage() {
           )}
         </div>
       </div>
-    </main>
+    </AppShell>
   );
 }
