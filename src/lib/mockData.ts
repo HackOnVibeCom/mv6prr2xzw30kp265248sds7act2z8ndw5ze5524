@@ -327,7 +327,7 @@ export const feedEvents: FeedEvent[] = [
   { id: "f20", appId: "demo-app", ts: "09:14:36", type: "content.generated", payload: 'event="launch" variants=8 latency=771ms' },
 ];
 
-const eventTemplates = [
+const eventTemplates: { type: string; payload: string }[] = [
   { type: "event.received", payload: 'type="milestone" value="referral_sent"' },
   { type: "content.generated", payload: 'event="milestone" variants=8 latency=624ms' },
   { type: "post.published", payload: 'platform="twitter" tone="casual" score=0.88' },
