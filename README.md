@@ -1,142 +1,160 @@
-# AutoPromo Dashboard
+# AutoPromo SDK
 
-Here's a full build prompt you can hand to a coding tool (Claude Code, v0, Cursor, or paste right back into a chat like this one) to generate the entire frontend in one go, using the exact palette we locked in.
+**HackOnVibe 2026 · August 14–16**
 
-Frontend Build Prompt — AutoPromo SDK Dashboard
+AutoPromo is a drop-in SDK that turns real product moments into platform-tailored promotional content, ranks the options using a strategy engine, and opens native compose screens so a human can publish in one tap.
 
-Project: Build the complete frontend for "AutoPromo SDK" — a dashboard that shows AI-generated promotional content for mobile apps, ranked by a strategy engine, with one-click share buttons that open real social platform compose windows. Use Next.js (App Router), TypeScript, and Tailwind CSS. Populate everything with realistic mock data (no real backend calls needed yet) so the full UI is demoable immediately.
+No automatic posting. No paid APIs. No ToS risk.
 
-Design system — use exactly these tones, nothing else
+---
 
-Mint ramp (backgrounds, light surfaces, subtle fills): #F4FBF7 #E1F5EA #C3EBD6 #9BDCBB #6FC79C #48A97D #2E7D5E
+## Live demo
 
-Green ramp (primary brand — buttons, links, active states, chosen/success indicators): #EAF6EE #C2E8CE #8FD1A6 #4FAE72 #278A52 #186B3E #0F4C2C
+| Page | URL |
+|---|---|
+| Landing | `/` |
+| App dashboard | `/apps/demo-app` |
+| Live feed | `/live/demo-app` |
+| All apps | `/apps` |
+| SDK docs | `/docs` |
+| OG share page | `/share/f1` |
 
-Olive ramp (dark surfaces, headings, structural chrome, dark-mode background): #F3F2E9 #DEDCC4 #B4B389 #83815A #5C5A3D #3D3B27 #1F1E14
+---
 
-Warm amber accent (used sparingly — live-feed pulse dot, top-ranked post highlight, "new" badges only, never more than 2–3 uses per screen): #FDF0DD #F6CE8E #E8A13B #B9711A
+## How it works
 
-Rules for using these tones:
+```
+Mobile app  →  AutoPromo.track("milestone", { value: "1000_downloads" })
+                      ↓
+              Backend API  →  Groq LLM (one structured JSON call)
+                      ↓
+          8 variants per event (4 platforms × 2 tones)
+                      ↓
+          Strategy Engine ranks by base_weight + 0.5 × (chosen/shown)
+                      ↓
+         Dashboard shows ranked cards  →  human clicks "Tweet it"
+                      ↓
+          twitter.com/intent/tweet opens pre-filled  →  human sends
+```
 
-Light mode: mint 50/100 for page background, white cards with mint 200 borders, green 500/600 for primary buttons, olive 600/700 for headings and body text.
+---
 
-Dark mode: olive 900 (#1F1E14) or a near-black variant for page background, olive 800 for card surfaces, mint 100/200 for body text, green 400/500 for buttons, amber reserved for live indicators only.
+## SDK integration (3 lines)
 
-Never use pure black or pure white text — always pull from the ramps (olive 900 for "black" text on light backgrounds, mint 50 for "white" text on dark backgrounds).
+```typescript
+import AutoPromo from "@autopromo/sdk";
 
-Amber must stay rare. If more than 3 elements on one screen use it, replace the extras with green.
+AutoPromo.init({
+  apiKey: process.env.AUTOPROMO_KEY,
+  appName: "YourApp",
+  appUrl: "https://yourapp.com",
+});
 
-Typography
+// Track product moments
+AutoPromo.track("launch");
+AutoPromo.track("milestone", { value: "1000_downloads" });
+AutoPromo.track("new_version", { build: "2.0.0" });
+AutoPromo.track("new_review", { rating: 5, body: review.text });
 
-Display/heading font: something with a bit of character but still clean — Space Grotesk or Sora.
+// Open a platform compose screen
+const posts = await AutoPromo.getRankedPosts();
+await AutoPromo.share(posts[0]);
+```
 
-Body font: Inter or system-ui for readability at small sizes.
+---
 
-Monospace font (for the live feed timestamps and event payloads): JetBrains Mono or Fira Code.
+## Platforms supported
 
-Pages to build
+| Platform | Method |
+|---|---|
+| Twitter / X | `twitter.com/intent/tweet` — native compose |
+| Reddit | `reddit.com/submit` — text or link post |
+| WhatsApp | `wa.me/?text=` — share sheet |
+| Telegram | `t.me/share/url` — share sheet |
+| LinkedIn | `linkedin.com/sharing/share-offsite` + OG share page |
+| Facebook | `facebook.com/sharer` + OG share page |
 
-1. / — Landing / overview
+---
 
-Hero section: product name, one-line pitch, a live-looking animated preview of a "post generating" moment (mock, but should feel alive — e.g. a card that appears with a subtle fade/slide as if just generated).
+## Strategy Engine
 
-Below: 3-column feature summary (Generate, Rank, Publish) using green-family icons.
+```
+score = base_weight(event_type, platform)
+      + 0.5 × (times_chosen / times_shown)
+```
 
-CTA button in green 600, linking to /apps/demo-app.
+Base weights are hard-coded starting priors. Over time the engine adjusts platform/tone order based on what your team actually publishes. Every post card shows its score in the corner — hover it to see the formula breakdown.
 
-2. /apps/[appId] — Main dashboard
+---
 
-Left sidebar: list of connected apps (mock 3 apps: "PocketRecipe", "FocusTimer", "TeamX's Habit Tracker" — the third simulating your real onboarded app), each with a small colored status dot (green = active, mint = idle).
+## Tech stack (100% free tier)
 
-Top bar: selected app name, description, and a "Trigger event" dropdown (Launch / Milestone / New version / New review) — clicking it should visually simulate a new event appearing (mock animation, no real backend needed).
+| Layer | Tool |
+|---|---|
+| Frontend | TanStack Start (React), TypeScript, Tailwind CSS v4 |
+| Database | Supabase (Postgres + Realtime) |
+| AI generation | Groq API — Llama 3.3 70B |
+| Backend | Vercel Serverless Functions |
+| Mobile demo | Expo / React Native |
+| Discord | Webhook auto-post on every event (no human click needed) |
 
-Main area: grid of generated post cards, each showing:
+---
 
-Platform icon + name (Twitter, Reddit, WhatsApp, LinkedIn)
-
-Tone label (casual/professional) as a small pill
-
-The generated content text (write 3–4 realistic mock examples per platform)
-
-A rank score (e.g. "0.87") shown subtly in the corner
-
-A "Post to [Platform]" button in green; once clicked (mock), it should visually transition to a "Posted ✓" state with a checkmark and slightly muted styling
-
-The single highest-ranked card per event should have a thin amber left border and a small "Top pick" badge — this is the only place amber appears on this screen
-
-Include a small side panel showing the Strategy Engine's learning: a simple horizontal bar chart per platform showing "times chosen / times shown" ratio, using green-ramp bars on a mint background.
-
-3. /live/[appId] — Public live feed
-
-Full dark-mode page (olive 900 background) regardless of the user's light/dark preference — this page should always feel like a "terminal" or "control room" view.
-
-Monospace timestamped event stream, newest at top, each new item entering with a brief highlight flash in amber before settling into mint/olive tones.
-
-A small pulsing dot (amber, animated pulse/glow using a CSS animation, not a static color) next to "Live" text at the top to reinforce this updates in real time.
-
-Mock a slow trickle of new events appearing every few seconds via setInterval and mock data, so the page feels alive even without a real backend connected yet.
-
-4. /apps — App selector / onboarding
-
-Simple card grid of all connected apps with an "Add new app" card (dashed mint border, green plus icon) that opens a mock form (app name + description fields).
-
-Mock data requirements
-
-At least 3 mock apps with realistic names/descriptions (a recipe app, a productivity app, a habit tracker).
-
-At least 8–10 mock generated posts per app, spread across all 4 platforms and both tones, with genuinely varied, realistic copy (not lorem ipsum) — write actual believable social post text for each.
-
-At least 15–20 mock live feed events with varied timestamps (some seconds ago, some minutes ago, some hours ago) to make the feed look like it has real history.
-
-Mock platform_stats numbers (times_shown/times_chosen) that are believable and not perfectly round (e.g. 14/19, not 10/20).
-
-Motion and "aliveness" requirements
-
-New cards/events should never just snap into place — use a brief fade + slight upward slide (150–250ms) on entry.
-
-The live feed's pulse dot needs a genuine CSS pulse animation (scale + opacity loop), not a static dot.
-
-Buttons need visible hover and active states using the ramp's adjacent shades (e.g., green 600 default → green 700 hover → scale(0.98) on click).
-
-Respect prefers-reduced-motion — fall back to instant state changes for users who have that set.
-
-Accessibility and polish requirements
-
-All interactive elements need visible keyboard focus rings (use a green-ramp focus ring, not browser default blue).
-
-Color contrast must pass WCAG AA for all text/background combinations from the ramps above — double-check pale mint text is never placed on pale mint backgrounds.
-
-Fully responsive down to mobile width (375px) — sidebar collapses to a bottom nav or hamburger on small screens.
-
-Empty states (e.g., an app with no generated posts yet) should read as an invitation, not an error — e.g. "No posts yet — trigger an event above to generate your first one," not "No data found."
-
-What NOT to do
-
-Do not use gradients, drop shadows, or neon glow effects anywhere — flat surfaces only, per the palette.
-
-Do not introduce any color outside the four ramps above (no random blues, purples, or reds sneaking in via default component libraries — override any default theme colors).
-
-Do not make every element animate — motion should be occasional and purposeful (new items entering, the live pulse, button presses), not constant background movement.
-
-Paste this directly into whatever tool builds your frontend. Want me to also write the actual mock data file (a mockData.ts with the 3 apps, ~10 posts each, and ~20 feed events) so the tool has real content to work from instead of generating its own?
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/f0a7b634-fb29-440b-bf30-a3d816b99306).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## Local development
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+git clone <repo-url>
+cd AutoPromo-SDK
+npm install
 npm run dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Environment variables (backend, not needed for frontend-only run)
+
+```
+GROQ_API_KEY=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+DISCORD_WEBHOOK_URL=
+```
+
+---
+
+## Business model
+
+| Tier | Price | Limits |
+|---|---|---|
+| Free | $0 | 20 posts/month · 1 app |
+| Builder | $12/month | 200 posts · 3 apps · strategy insights |
+| Agency | $39/month | Unlimited posts · unlimited apps · white-label |
+
+---
+
+## Project structure
+
+```
+src/
+  routes/
+    index.tsx          # Landing page + pricing
+    apps.index.tsx     # App selector / onboarding
+    apps.$appId.tsx    # Per-app dashboard (trigger events, view posts)
+    live.$appId.tsx    # Public live feed (dark terminal view)
+    docs.index.tsx     # SDK integration guide
+    share.$eventId.tsx # OG share page for LinkedIn/Facebook
+  components/
+    AppShell.tsx       # Sidebar nav + header
+    PostCard.tsx       # Individual post with share/copy/regenerate
+    PlatformIcon.tsx   # SVG icons for all 6 platforms
+    ThemeToggle.tsx    # Light/dark mode toggle
+  lib/
+    mockData.ts        # All demo data (apps, posts, feed events, stats)
+    share.ts           # Share intent URL builders
+```
+
+---
+
+Built for [HackOnVibe](https://hackonvibe.com) by the AutoPromo team.
+This project was also scaffolded with [Lovable](https://lovable.dev/projects/f0a7b634-fb29-440b-bf30-a3d816b99306).

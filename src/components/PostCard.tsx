@@ -38,9 +38,9 @@ export function PostCard({
 
   return (
     <article
-      className={`ap-enter flex flex-col gap-3 rounded-xl border bg-surface p-4 ${
+      className={`ap-enter flex flex-col gap-3 rounded-xl border bg-surface p-4 transition-opacity ${
         topPick ? "border-l-2 border-l-amber-200" : ""
-      } ${posted ? "opacity-80" : ""}`}
+      } ${posted ? "opacity-70" : ""}`}
     >
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -77,14 +77,33 @@ export function PostCard({
       )}
 
       <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-        <button
-          type="button"
-          onClick={share}
-          className="ap-press inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-          {posted ? "Open again" : platformLabel[post.platform]}
-        </button>
+        {posted ? (
+          <>
+            <button
+              type="button"
+              onClick={share}
+              className="ap-press inline-flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-500 dark:border-green-300/30 dark:bg-olive-400 dark:text-mint-200"
+            >
+              ✓ Compose opened
+            </button>
+            <button
+              type="button"
+              onClick={() => setPosted(false)}
+              className="text-xs text-muted-fg hover:underline"
+            >
+              reset
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={share}
+            className="ap-press inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            {platformLabel[post.platform]}
+          </button>
+        )}
         <button
           type="button"
           onClick={copy}
@@ -102,11 +121,6 @@ export function PostCard({
         >
           <RefreshCw className="h-3.5 w-3.5" />
         </button>
-        {posted && (
-          <span className="ml-auto font-mono text-[11px] text-green-400 dark:text-mint-300">
-            compose opened ✓
-          </span>
-        )}
       </div>
     </article>
   );

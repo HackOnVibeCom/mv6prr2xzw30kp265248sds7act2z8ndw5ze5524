@@ -14,6 +14,7 @@ import { Route as AppsIndexRouteImport } from './routes/apps.index'
 import { Route as AppsAppIdRouteImport } from './routes/apps.$appId'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as LiveAppIdRouteImport } from './routes/live.$appId'
+import { Route as ShareEventIdRouteImport } from './routes/share.$eventId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,11 +41,17 @@ const LiveAppIdRoute = LiveAppIdRouteImport.update({
   path: '/live/$appId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShareEventIdRoute = ShareEventIdRouteImport.update({
+  id: '/share/$eventId',
+  path: '/share/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/apps/$appId': typeof AppsAppIdRoute
   '/live/$appId': typeof LiveAppIdRoute
+  '/share/$eventId': typeof ShareEventIdRoute
   '/apps/': typeof AppsIndexRoute
   '/docs/': typeof DocsIndexRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/apps/$appId': typeof AppsAppIdRoute
   '/live/$appId': typeof LiveAppIdRoute
+  '/share/$eventId': typeof ShareEventIdRoute
   '/apps': typeof AppsIndexRoute
   '/docs': typeof DocsIndexRoute
 }
@@ -60,21 +68,42 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/apps/$appId': typeof AppsAppIdRoute
   '/live/$appId': typeof LiveAppIdRoute
+  '/share/$eventId': typeof ShareEventIdRoute
   '/apps/': typeof AppsIndexRoute
   '/docs/': typeof DocsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/apps/$appId' | '/live/$appId' | '/apps/' | '/docs/'
+  fullPaths:
+    | '/'
+    | '/apps/$appId'
+    | '/live/$appId'
+    | '/share/$eventId'
+    | '/apps/'
+    | '/docs/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/apps/$appId' | '/live/$appId' | '/apps' | '/docs'
-  id: '__root__' | '/' | '/apps/$appId' | '/live/$appId' | '/apps/' | '/docs/'
+  to:
+    | '/'
+    | '/apps/$appId'
+    | '/live/$appId'
+    | '/share/$eventId'
+    | '/apps'
+    | '/docs'
+  id:
+    | '__root__'
+    | '/'
+    | '/apps/$appId'
+    | '/live/$appId'
+    | '/share/$eventId'
+    | '/apps/'
+    | '/docs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppsAppIdRoute: typeof AppsAppIdRoute
   LiveAppIdRoute: typeof LiveAppIdRoute
+  ShareEventIdRoute: typeof ShareEventIdRoute
   AppsIndexRoute: typeof AppsIndexRoute
   DocsIndexRoute: typeof DocsIndexRoute
 }
@@ -116,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LiveAppIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/share/$eventId': {
+      id: '/share/$eventId'
+      path: '/share/$eventId'
+      fullPath: '/share/$eventId'
+      preLoaderRoute: typeof ShareEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -123,9 +159,20 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppsAppIdRoute: AppsAppIdRoute,
   LiveAppIdRoute: LiveAppIdRoute,
+  ShareEventIdRoute: ShareEventIdRoute,
   AppsIndexRoute: AppsIndexRoute,
   DocsIndexRoute: DocsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
