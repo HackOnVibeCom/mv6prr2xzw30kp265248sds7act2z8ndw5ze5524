@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "AutoPromo Demo",
+    "slug": "autopromo-demo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#1f1e14",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1f1e14"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.autopromo.demo"
+    },
+    "android": {
+      "package": "app.autopromo.demo",
+      "adaptiveIcon": {
+        "backgroundColor": "#1f1e14"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

@@ -18,7 +18,8 @@ export interface ReviewPayload {
   rating: number; // 1–5
 }
 
-export type EventPayload = MilestonePayload | VersionPayload | ReviewPayload | Record<string, unknown>;
+export type EventPayload =
+  MilestonePayload | VersionPayload | ReviewPayload | Record<string, unknown>;
 
 // ─── Database row shapes ──────────────────────────────────────────────────────
 
@@ -64,7 +65,9 @@ export interface PostVariant {
   platform: Platform;
   tone: Tone;
   content: string;
-  link_title?: string;
+  link_title?: string | null;
+  /** Present once the Strategy Engine has scored the variant. */
+  rank_score?: number;
 }
 
 export interface GroqResponse {

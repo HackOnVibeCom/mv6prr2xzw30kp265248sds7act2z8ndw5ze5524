@@ -95,7 +95,11 @@ function SharePage() {
             <p className="mt-3 text-sm leading-relaxed text-muted-fg">{primaryPost.content}</p>
             <div className="mt-4">
               <a
-                href={buildShareUrl(primaryPost.platform as Platform, primaryPost, app?.url ?? "https://autopromo.app")}
+                href={buildShareUrl(
+                  primaryPost.platform as Platform,
+                  primaryPost,
+                  app?.url ?? "https://autopromo.app",
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="ap-press inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
@@ -131,7 +135,11 @@ function SharePage() {
                     </div>
                     <p className="mt-2 text-sm leading-relaxed text-muted-fg">{p.content}</p>
                     <a
-                      href={buildShareUrl(p.platform as Platform, p, app?.url ?? "https://autopromo.app")}
+                      href={buildShareUrl(
+                        p.platform as Platform,
+                        p,
+                        app?.url ?? "https://autopromo.app",
+                      )}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="ap-press mt-3 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-mint-100 dark:hover:bg-olive-500"

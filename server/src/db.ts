@@ -1,16 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !serviceRoleKey) {
-  throw new Error(
-    "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables"
-  );
-}
+import { env } from "./env";
 
 /**
  * Server-side Supabase client using the service-role key.
- * This bypasses RLS — only use in server code, never ship to the client.
+ *
+ * The service-role key bypasses row-level security entirely, so this client
+ * must never be imported by anything that runs in a browser. Credentials are
+ * validated at boot in `env.ts`.
  */
-export const supabase = createClient(supabaseUrl, serviceRoleKey);
+export const supabase = createClient(env.supabaseUrl, env.supabaseServiceRoleKey, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});

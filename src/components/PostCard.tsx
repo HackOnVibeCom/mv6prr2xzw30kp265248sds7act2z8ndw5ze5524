@@ -1,20 +1,29 @@
 import { useState } from "react";
-import { Copy, Check, ExternalLink, RefreshCw } from "lucide-react";
+import { Copy, Check, ExternalLink, Info } from "lucide-react";
 import { toast } from "sonner";
 import { PlatformIcon } from "@/components/PlatformIcon";
+import { ScoreBreakdown } from "@/components/ScoreBreakdown";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { buildShareUrl, platformLabel } from "@/lib/share";
-import type { Post } from "@/lib/mockData";
+import type { PlatformStat, Post } from "@/lib/mockData";
 
 export function PostCard({
   post,
   appUrl,
   topPick,
+  stats = [],
+  onPublish,
 }: {
   post: Post;
   appUrl: string;
   topPick?: boolean;
+  /** Platform stats for this app, used to explain the score. */
+  stats?: PlatformStat[];
+  /** Records the choice with the backend so the Strategy Engine learns. */
+  onPublish?: (post: Post) => void;
 }) {
-  const [posted, setPosted] = useState(false);
+  // `chosen` comes from the backend for live posts; seed posts start unposted.
+  const [posted, setPosted] = useState(post.chosen ?? false);
   const [copied, setCopied] = useState(false);
 
   const text = `${post.content}${post.hashtags.length ? `\n\n${post.hashtags.join(" ")}` : ""}`;
@@ -33,14 +42,17 @@ export function PostCard({
   function share() {
     window.open(buildShareUrl(post.platform, post, appUrl), "_blank", "noopener,noreferrer");
     setPosted(true);
-    toast.success(`Compose screen opened for ${post.platform}`);
+    onPublish?.(post);
+    toast.success(`Compose screen opened for ${post.platform}`, {
+      description: "Publishing it teaches the strategy engine your preference.",
+    });
   }
 
   return (
     <article
-      className={`ap-enter flex flex-col gap-3 rounded-xl border bg-surface p-4 transition-opacity ${
-        topPick ? "border-l-2 border-l-amber-200" : ""
-      } ${posted ? "opacity-70" : ""}`}
+      className={`ap-enter group flex flex-col gap-3 rounded-xl border bg-surface p-4 transition-all duration-200 hover:border-mint-400 hover:shadow-sm dark:hover:border-olive-300 ${
+        topPick ? "border-l-2 border-l-amber-200 hover:border-l-amber-200" : ""
+      } ${posted ? "opacity-70 hover:opacity-100" : ""}`}
     >
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -60,13 +72,32 @@ export function PostCard({
             </span>
           )}
         </div>
-        <span
-          className="shrink-0 font-mono text-[11px] text-olive-300 dark:text-olive-200"
-          title="Strategy engine score"
-        >
-          {post.score.toFixed(2)}
-        </span>
+
+        {/* Score — click to see exactly how the strategy engine produced it */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Score ${post.score.toFixed(2)} — explain this ranking`}
+              className="ap-press inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 font-mono text-[11px] text-olive-300 hover:bg-mint-100 dark:text-olive-200 dark:hover:bg-olive-500"
+            >
+              {post.score.toFixed(2)}
+              <Info className="h-3 w-3" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-auto p-3">
+            <ScoreBreakdown
+              event={post.event}
+              platform={post.platform}
+              stats={stats}
+              displayScore={post.score}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
+
+      {/* Reddit / OG title, when the backend supplied one */}
+      {post.linkTitle && <p className="font-display text-sm font-semibold">{post.linkTitle}</p>}
 
       <p className="text-sm leading-relaxed whitespace-pre-line text-muted-fg">{post.content}</p>
 
@@ -112,14 +143,6 @@ export function PostCard({
         >
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
           {copied ? "Copied" : "Copy"}
-        </button>
-        <button
-          type="button"
-          onClick={() => toast("Regenerating variant…", { description: "Mock SDK response" })}
-          aria-label="Regenerate this post"
-          className="ap-press inline-flex h-9 w-9 items-center justify-center rounded-lg border text-muted-fg hover:bg-mint-100 dark:hover:bg-olive-500"
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
         </button>
       </div>
     </article>

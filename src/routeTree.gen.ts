@@ -10,15 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnalyticsIndexRouteImport } from './routes/analytics.index'
 import { Route as AppsIndexRouteImport } from './routes/apps.index'
 import { Route as AppsAppIdRouteImport } from './routes/apps.$appId'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as LiveAppIdRouteImport } from './routes/live.$appId'
+import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as ShareEventIdRouteImport } from './routes/share.$eventId'
+import { Route as AppsAppIdAdsRouteImport } from './routes/apps.$appId.ads'
+import { Route as AppsAppIdEventsEventIdRouteImport } from './routes/apps.$appId.events.$eventId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsIndexRoute = AnalyticsIndexRouteImport.update({
+  id: '/analytics/',
+  path: '/analytics/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppsIndexRoute = AppsIndexRouteImport.update({
@@ -41,36 +50,63 @@ const LiveAppIdRoute = LiveAppIdRouteImport.update({
   path: '/live/$appId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShareEventIdRoute = ShareEventIdRouteImport.update({
   id: '/share/$eventId',
   path: '/share/$eventId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppsAppIdAdsRoute = AppsAppIdAdsRouteImport.update({
+  id: '/ads',
+  path: '/ads',
+  getParentRoute: () => AppsAppIdRoute,
+} as any)
+const AppsAppIdEventsEventIdRoute = AppsAppIdEventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => AppsAppIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/apps/$appId': typeof AppsAppIdRoute
+  '/apps/$appId': typeof AppsAppIdRouteWithChildren
   '/live/$appId': typeof LiveAppIdRoute
   '/share/$eventId': typeof ShareEventIdRoute
+  '/analytics/': typeof AnalyticsIndexRoute
   '/apps/': typeof AppsIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/apps/$appId/ads': typeof AppsAppIdAdsRoute
+  '/apps/$appId/events/$eventId': typeof AppsAppIdEventsEventIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/apps/$appId': typeof AppsAppIdRoute
+  '/apps/$appId': typeof AppsAppIdRouteWithChildren
   '/live/$appId': typeof LiveAppIdRoute
   '/share/$eventId': typeof ShareEventIdRoute
+  '/analytics': typeof AnalyticsIndexRoute
   '/apps': typeof AppsIndexRoute
   '/docs': typeof DocsIndexRoute
+  '/settings': typeof SettingsIndexRoute
+  '/apps/$appId/ads': typeof AppsAppIdAdsRoute
+  '/apps/$appId/events/$eventId': typeof AppsAppIdEventsEventIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/apps/$appId': typeof AppsAppIdRoute
+  '/apps/$appId': typeof AppsAppIdRouteWithChildren
   '/live/$appId': typeof LiveAppIdRoute
   '/share/$eventId': typeof ShareEventIdRoute
+  '/analytics/': typeof AnalyticsIndexRoute
   '/apps/': typeof AppsIndexRoute
   '/docs/': typeof DocsIndexRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/apps/$appId/ads': typeof AppsAppIdAdsRoute
+  '/apps/$appId/events/$eventId': typeof AppsAppIdEventsEventIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -79,33 +115,47 @@ export interface FileRouteTypes {
     | '/apps/$appId'
     | '/live/$appId'
     | '/share/$eventId'
+    | '/analytics/'
     | '/apps/'
     | '/docs/'
+    | '/settings/'
+    | '/apps/$appId/ads'
+    | '/apps/$appId/events/$eventId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/apps/$appId'
     | '/live/$appId'
     | '/share/$eventId'
+    | '/analytics'
     | '/apps'
     | '/docs'
+    | '/settings'
+    | '/apps/$appId/ads'
+    | '/apps/$appId/events/$eventId'
   id:
     | '__root__'
     | '/'
     | '/apps/$appId'
     | '/live/$appId'
     | '/share/$eventId'
+    | '/analytics/'
     | '/apps/'
     | '/docs/'
+    | '/settings/'
+    | '/apps/$appId/ads'
+    | '/apps/$appId/events/$eventId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AppsAppIdRoute: typeof AppsAppIdRoute
+  AppsAppIdRoute: typeof AppsAppIdRouteWithChildren
   LiveAppIdRoute: typeof LiveAppIdRoute
   ShareEventIdRoute: typeof ShareEventIdRoute
+  AnalyticsIndexRoute: typeof AnalyticsIndexRoute
   AppsIndexRoute: typeof AppsIndexRoute
   DocsIndexRoute: typeof DocsIndexRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -115,6 +165,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics/': {
+      id: '/analytics/'
+      path: '/analytics'
+      fullPath: '/analytics/'
+      preLoaderRoute: typeof AnalyticsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/apps/': {
@@ -145,6 +202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LiveAppIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/share/$eventId': {
       id: '/share/$eventId'
       path: '/share/$eventId'
@@ -152,16 +216,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShareEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/apps/$appId/ads': {
+      id: '/apps/$appId/ads'
+      path: '/ads'
+      fullPath: '/apps/$appId/ads'
+      preLoaderRoute: typeof AppsAppIdAdsRouteImport
+      parentRoute: typeof AppsAppIdRoute
+    }
+    '/apps/$appId/events/$eventId': {
+      id: '/apps/$appId/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/apps/$appId/events/$eventId'
+      preLoaderRoute: typeof AppsAppIdEventsEventIdRouteImport
+      parentRoute: typeof AppsAppIdRoute
+    }
   }
 }
 
+interface AppsAppIdRouteChildren {
+  AppsAppIdAdsRoute: typeof AppsAppIdAdsRoute
+  AppsAppIdEventsEventIdRoute: typeof AppsAppIdEventsEventIdRoute
+}
+
+const AppsAppIdRouteChildren: AppsAppIdRouteChildren = {
+  AppsAppIdAdsRoute: AppsAppIdAdsRoute,
+  AppsAppIdEventsEventIdRoute: AppsAppIdEventsEventIdRoute,
+}
+
+const AppsAppIdRouteWithChildren = AppsAppIdRoute._addFileChildren(
+  AppsAppIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AppsAppIdRoute: AppsAppIdRoute,
+  AppsAppIdRoute: AppsAppIdRouteWithChildren,
   LiveAppIdRoute: LiveAppIdRoute,
   ShareEventIdRoute: ShareEventIdRoute,
+  AnalyticsIndexRoute: AnalyticsIndexRoute,
   AppsIndexRoute: AppsIndexRoute,
   DocsIndexRoute: DocsIndexRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -55,7 +55,7 @@ export function computeRankScore(
   eventType: EventType,
   platform: Platform,
   tone: Tone,
-  stats: PlatformStatRow[]
+  stats: PlatformStatRow[],
 ): number {
   const base = BASE_WEIGHTS[eventType]?.[platform] ?? 0.4;
 

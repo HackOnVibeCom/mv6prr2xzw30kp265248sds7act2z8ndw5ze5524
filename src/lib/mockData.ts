@@ -28,6 +28,12 @@ export interface App {
   postsGenerated: number;
   postsPublished: number;
   connectedAt: string;
+  /**
+   * True for the bundled showcase apps. Their installs, ratings and reviews are
+   * illustrative sample data — a real app created through the API is never
+   * given these numbers, so the UI must label demo apps wherever they appear.
+   */
+  isDemo?: boolean;
 }
 
 export interface Post {
@@ -40,6 +46,12 @@ export interface Post {
   score: number;
   hashtags: string[];
   createdAt: string;
+  /** Set on posts loaded from the live backend; absent on seed data. */
+  eventId?: string;
+  /** Reddit title / OG title. Live posts only. */
+  linkTitle?: string | null;
+  /** Whether a human already published this variant. Live posts only. */
+  chosen?: boolean;
 }
 
 export interface FeedEvent {
@@ -74,7 +86,14 @@ export interface DayPoint {
 
 /* ------------------------------------------------------------------ apps */
 
-export const apps: App[] = [
+/**
+ * Bundled showcase apps.
+ *
+ * These always exist alongside whatever the user creates, so the dashboard has
+ * something rich to demonstrate. Every entry is flagged `isDemo` on export —
+ * their metrics are illustrative, never real telemetry.
+ */
+const demoApps: App[] = [
   {
     id: "demo-app",
     name: "PocketRecipe",
@@ -157,6 +176,10 @@ export const apps: App[] = [
   },
 ];
 
+/** Demo apps, each flagged so the UI can label them and never treat their
+ *  sample metrics as real telemetry. */
+export const apps: App[] = demoApps.map((a) => ({ ...a, isDemo: true }));
+
 export function getApp(appId: string) {
   return apps.find((a) => a.id === appId);
 }
@@ -201,7 +224,7 @@ const postSeed: Record<string, Seed[]> = {
       score: 0.69,
       hashtags: ["#appreview"],
       content:
-        '⭐⭐⭐⭐⭐ "Used it four nights in a row and didn\'t order once." That\'s the review. That\'s the whole post. PocketRecipe, free on both stores.',
+        "⭐⭐⭐⭐⭐ \"Used it four nights in a row and didn't order once.\" That's the review. That's the whole post. PocketRecipe, free on both stores.",
     },
     {
       platform: "Reddit",
@@ -264,7 +287,7 @@ const postSeed: Record<string, Seed[]> = {
       score: 0.58,
       hashtags: ["#indiehackers"],
       content:
-        'Best review we\'ve had so far: "I stopped buying coriander I already own." Small win, but that\'s the whole product in one sentence. PocketRecipe is free on iOS and Android.',
+        "Best review we've had so far: \"I stopped buying coriander I already own.\" Small win, but that's the whole product in one sentence. PocketRecipe is free on iOS and Android.",
     },
     {
       platform: "Telegram",
@@ -311,7 +334,7 @@ const postSeed: Record<string, Seed[]> = {
       score: 0.55,
       hashtags: [],
       content:
-        '"First timer app I haven\'t uninstalled by Wednesday." We\'ll take it. FocusTimer 2.0 is live on Android and iOS.',
+        "\"First timer app I haven't uninstalled by Wednesday.\" We'll take it. FocusTimer 2.0 is live on Android and iOS.",
     },
     {
       platform: "Reddit",
@@ -574,7 +597,21 @@ const postSeed: Record<string, Seed[]> = {
   ],
 };
 
-const baseTimes = ["09:14", "10:02", "11:47", "12:41", "13:30", "14:08", "14:29", "15:03", "15:52", "16:20", "17:05", "18:12", "19:40"];
+const baseTimes = [
+  "09:14",
+  "10:02",
+  "11:47",
+  "12:41",
+  "13:30",
+  "14:08",
+  "14:29",
+  "15:03",
+  "15:52",
+  "16:20",
+  "17:05",
+  "18:12",
+  "19:40",
+];
 
 export const posts: Post[] = Object.entries(postSeed).flatMap(([appId, list]) =>
   list.map((p, i) => ({
@@ -585,8 +622,74 @@ export const posts: Post[] = Object.entries(postSeed).flatMap(([appId, list]) =>
   })),
 );
 
+export function generateSeedPostsForApp(app: App): Post[] {
+  const name = app.name;
+  const desc = app.description || app.tagline || name;
+  return [
+    {
+      id: `${app.id}-gen-1`,
+      appId: app.id,
+      platform: "Twitter",
+      tone: "hype",
+      event: "Launch",
+      score: 0.94,
+      hashtags: ["#launch", "#indiehackers", `#${name.toLowerCase().replace(/\s+/g, "")}`],
+      content: `🚀 ${name} is officially live! ${desc} Try it out today and let us know what you think: ${app.url}`,
+      createdAt: "10:15",
+    },
+    {
+      id: `${app.id}-gen-2`,
+      appId: app.id,
+      platform: "Twitter",
+      tone: "casual",
+      event: "Milestone",
+      score: 0.88,
+      hashtags: ["#buildinpublic", `#${name.toLowerCase().replace(/\s+/g, "")}`],
+      content: `We just passed our first major milestone on ${name}! Thanks to everyone using ${name} to solve ${desc.toLowerCase()}.`,
+      createdAt: "11:30",
+    },
+    {
+      id: `${app.id}-gen-3`,
+      appId: app.id,
+      platform: "LinkedIn",
+      tone: "professional",
+      event: "New version",
+      score: 0.82,
+      hashtags: ["#productupdate", "#tech"],
+      content: `Excited to announce the latest update for ${name}! Built specifically for users who need ${desc}. Check out the release: ${app.url}`,
+      createdAt: "14:00",
+    },
+    {
+      id: `${app.id}-gen-4`,
+      appId: app.id,
+      platform: "Reddit",
+      tone: "casual",
+      event: "Launch",
+      score: 0.79,
+      hashtags: [],
+      content: `I built ${name} because I was looking for a solution that simplifies ${desc}. Free to try and would love your feedback!`,
+      createdAt: "15:45",
+    },
+    {
+      id: `${app.id}-gen-5`,
+      appId: app.id,
+      platform: "WhatsApp",
+      tone: "casual",
+      event: "Milestone",
+      score: 0.75,
+      hashtags: [],
+      content: `Hey! Check out ${name} — ${desc}. Genuinely saves so much time: ${app.url}`,
+      createdAt: "17:20",
+    },
+  ];
+}
+
 export function getPosts(appId: string) {
-  return posts.filter((p) => p.appId === appId);
+  const seedList = posts.filter((p) => p.appId === appId);
+  if (seedList.length > 0) return seedList;
+  const app = getApp(appId);
+  if (app) return generateSeedPostsForApp(app);
+  return [];
 }
 
 /* ------------------------------------------------------- strategy engine */
@@ -720,16 +823,96 @@ export const activity: Record<string, DayPoint[]> = {
 /* --------------------------------------------------------------- reviews */
 
 export const reviews: Review[] = [
-  { id: "r1", appId: "demo-app", author: "hannah_k", rating: 5, store: "App Store", date: "30 Jul", body: "Used it four nights in a row and didn't order takeaway once. The fridge scan is genuinely accurate." },
-  { id: "r2", appId: "demo-app", author: "m.oduya", rating: 5, store: "Play Store", date: "29 Jul", body: "I stopped buying coriander I already own. Worth it for that alone." },
-  { id: "r3", appId: "demo-app", author: "tinytoast", rating: 4, store: "App Store", date: "27 Jul", body: "Great idea, but it thinks every green thing is a courgette. Still cooking with it daily." },
-  { id: "r4", appId: "focus-timer", author: "dev_marcus", rating: 5, store: "Play Store", date: "30 Jul", body: "First timer app I haven't uninstalled by Wednesday. The blocking is what makes it work." },
-  { id: "r5", appId: "focus-timer", author: "reva.s", rating: 4, store: "Play Store", date: "26 Jul", body: "Weekly report is lovely. Wish I could schedule sessions in advance." },
-  { id: "r6", appId: "habit-tracker", author: "squadleadjo", rating: 5, store: "App Store", date: "28 Jul", body: "My squad noticed I'd stopped before I did. That's the entire point of it." },
-  { id: "r7", appId: "habit-tracker", author: "p_ferreira", rating: 4, store: "Play Store", date: "24 Jul", body: "Cover days saved our 60-day streak. Invites could be simpler." },
-  { id: "r8", appId: "splitbill", author: "nkechi.a", rating: 5, store: "App Store", date: "29 Jul", body: "Paid off the whole table before the waiter came back. Ridiculous how fast it is." },
-  { id: "r9", appId: "splitbill", author: "tomtomtom", rating: 4, store: "App Store", date: "25 Jul", body: "OCR struggled with a faded receipt but manual entry was quick." },
-  { id: "r10", appId: "nightsky", author: "orion_dad", rating: 5, store: "Play Store", date: "30 Jul", body: "Took it camping with no signal and it worked perfectly. My kid named six constellations." },
+  {
+    id: "r1",
+    appId: "demo-app",
+    author: "hannah_k",
+    rating: 5,
+    store: "App Store",
+    date: "30 Jul",
+    body: "Used it four nights in a row and didn't order takeaway once. The fridge scan is genuinely accurate.",
+  },
+  {
+    id: "r2",
+    appId: "demo-app",
+    author: "m.oduya",
+    rating: 5,
+    store: "Play Store",
+    date: "29 Jul",
+    body: "I stopped buying coriander I already own. Worth it for that alone.",
+  },
+  {
+    id: "r3",
+    appId: "demo-app",
+    author: "tinytoast",
+    rating: 4,
+    store: "App Store",
+    date: "27 Jul",
+    body: "Great idea, but it thinks every green thing is a courgette. Still cooking with it daily.",
+  },
+  {
+    id: "r4",
+    appId: "focus-timer",
+    author: "dev_marcus",
+    rating: 5,
+    store: "Play Store",
+    date: "30 Jul",
+    body: "First timer app I haven't uninstalled by Wednesday. The blocking is what makes it work.",
+  },
+  {
+    id: "r5",
+    appId: "focus-timer",
+    author: "reva.s",
+    rating: 4,
+    store: "Play Store",
+    date: "26 Jul",
+    body: "Weekly report is lovely. Wish I could schedule sessions in advance.",
+  },
+  {
+    id: "r6",
+    appId: "habit-tracker",
+    author: "squadleadjo",
+    rating: 5,
+    store: "App Store",
+    date: "28 Jul",
+    body: "My squad noticed I'd stopped before I did. That's the entire point of it.",
+  },
+  {
+    id: "r7",
+    appId: "habit-tracker",
+    author: "p_ferreira",
+    rating: 4,
+    store: "Play Store",
+    date: "24 Jul",
+    body: "Cover days saved our 60-day streak. Invites could be simpler.",
+  },
+  {
+    id: "r8",
+    appId: "splitbill",
+    author: "nkechi.a",
+    rating: 5,
+    store: "App Store",
+    date: "29 Jul",
+    body: "Paid off the whole table before the waiter came back. Ridiculous how fast it is.",
+  },
+  {
+    id: "r9",
+    appId: "splitbill",
+    author: "tomtomtom",
+    rating: 4,
+    store: "App Store",
+    date: "25 Jul",
+    body: "OCR struggled with a faded receipt but manual entry was quick.",
+  },
+  {
+    id: "r10",
+    appId: "nightsky",
+    author: "orion_dad",
+    rating: 5,
+    store: "Play Store",
+    date: "30 Jul",
+    body: "Took it camping with no signal and it worked perfectly. My kid named six constellations.",
+  },
 ];
 
 export function getReviews(appId: string) {
@@ -739,32 +922,162 @@ export function getReviews(appId: string) {
 /* ------------------------------------------------------------- live feed */
 
 const rawFeed: Omit<FeedEvent, "id">[] = [
-  { appId: "demo-app", ts: "14:32:07", type: "post.published", payload: 'platform="twitter" tone="casual" score=0.91' },
-  { appId: "demo-app", ts: "14:31:44", type: "content.generated", payload: 'event="milestone" variants=8 latency=612ms' },
-  { appId: "demo-app", ts: "14:29:58", type: "event.received", payload: 'type="milestone" value="1000_downloads"' },
-  { appId: "splitbill", ts: "14:28:12", type: "post.published", payload: 'platform="whatsapp" tone="casual" score=0.70' },
-  { appId: "focus-timer", ts: "14:26:11", type: "post.published", payload: 'platform="reddit" tone="casual" score=0.80' },
-  { appId: "demo-app", ts: "14:24:03", type: "strategy.reranked", payload: 'twitter=+0.04 whatsapp=-0.06' },
-  { appId: "nightsky", ts: "14:21:49", type: "sdk.handshake", payload: 'sdk="0.4.1" platform="unity" ok=true' },
-  { appId: "habit-tracker", ts: "14:19:37", type: "sdk.handshake", payload: 'sdk="0.4.0" platform="flutter" ok=true' },
-  { appId: "demo-app", ts: "14:12:50", type: "content.generated", payload: 'event="new_review" variants=4 latency=488ms' },
-  { appId: "demo-app", ts: "14:08:19", type: "event.received", payload: 'type="new_review" rating=5' },
-  { appId: "splitbill", ts: "14:02:31", type: "content.generated", payload: 'event="milestone" variants=6 latency=534ms' },
-  { appId: "focus-timer", ts: "13:57:02", type: "post.published", payload: 'platform="linkedin" tone="professional" score=0.76' },
-  { appId: "focus-timer", ts: "13:44:26", type: "content.generated", payload: 'event="new_version" variants=6 latency=703ms' },
-  { appId: "habit-tracker", ts: "13:31:15", type: "event.received", payload: 'type="milestone" value="250_squads"' },
-  { appId: "habit-tracker", ts: "13:30:58", type: "content.generated", payload: 'event="milestone" variants=8 latency=559ms' },
-  { appId: "nightsky", ts: "13:14:20", type: "event.received", payload: 'type="launch" store="android"' },
-  { appId: "demo-app", ts: "12:58:41", type: "post.skipped", payload: 'platform="whatsapp" reason="user_dismissed"' },
-  { appId: "demo-app", ts: "12:41:09", type: "strategy.reranked", payload: 'reddit=+0.02 linkedin=+0.01' },
-  { appId: "focus-timer", ts: "12:20:33", type: "event.received", payload: 'type="new_version" build="2.0.0"' },
-  { appId: "splitbill", ts: "12:04:57", type: "event.received", payload: 'type="milestone" value="500_bills"' },
-  { appId: "demo-app", ts: "11:47:52", type: "post.published", payload: 'platform="reddit" tone="casual" score=0.84' },
-  { appId: "habit-tracker", ts: "11:12:04", type: "post.published", payload: 'platform="whatsapp" tone="casual" score=0.64' },
-  { appId: "nightsky", ts: "10:51:38", type: "content.generated", payload: 'event="launch" variants=4 latency=655ms' },
-  { appId: "demo-app", ts: "10:39:21", type: "event.received", payload: 'type="launch" store="ios,android"' },
-  { appId: "focus-timer", ts: "09:58:47", type: "sdk.handshake", payload: 'sdk="0.4.1" platform="react-native" ok=true' },
-  { appId: "demo-app", ts: "09:14:36", type: "content.generated", payload: 'event="launch" variants=8 latency=771ms' },
+  {
+    appId: "demo-app",
+    ts: "14:32:07",
+    type: "post.published",
+    payload: 'platform="twitter" tone="casual" score=0.91',
+  },
+  {
+    appId: "demo-app",
+    ts: "14:31:44",
+    type: "content.generated",
+    payload: 'event="milestone" variants=8 latency=612ms',
+  },
+  {
+    appId: "demo-app",
+    ts: "14:29:58",
+    type: "event.received",
+    payload: 'type="milestone" value="1000_downloads"',
+  },
+  {
+    appId: "splitbill",
+    ts: "14:28:12",
+    type: "post.published",
+    payload: 'platform="whatsapp" tone="casual" score=0.70',
+  },
+  {
+    appId: "focus-timer",
+    ts: "14:26:11",
+    type: "post.published",
+    payload: 'platform="reddit" tone="casual" score=0.80',
+  },
+  {
+    appId: "demo-app",
+    ts: "14:24:03",
+    type: "strategy.reranked",
+    payload: "twitter=+0.04 whatsapp=-0.06",
+  },
+  {
+    appId: "nightsky",
+    ts: "14:21:49",
+    type: "sdk.handshake",
+    payload: 'sdk="0.4.1" platform="unity" ok=true',
+  },
+  {
+    appId: "habit-tracker",
+    ts: "14:19:37",
+    type: "sdk.handshake",
+    payload: 'sdk="0.4.0" platform="flutter" ok=true',
+  },
+  {
+    appId: "demo-app",
+    ts: "14:12:50",
+    type: "content.generated",
+    payload: 'event="new_review" variants=4 latency=488ms',
+  },
+  {
+    appId: "demo-app",
+    ts: "14:08:19",
+    type: "event.received",
+    payload: 'type="new_review" rating=5',
+  },
+  {
+    appId: "splitbill",
+    ts: "14:02:31",
+    type: "content.generated",
+    payload: 'event="milestone" variants=6 latency=534ms',
+  },
+  {
+    appId: "focus-timer",
+    ts: "13:57:02",
+    type: "post.published",
+    payload: 'platform="linkedin" tone="professional" score=0.76',
+  },
+  {
+    appId: "focus-timer",
+    ts: "13:44:26",
+    type: "content.generated",
+    payload: 'event="new_version" variants=6 latency=703ms',
+  },
+  {
+    appId: "habit-tracker",
+    ts: "13:31:15",
+    type: "event.received",
+    payload: 'type="milestone" value="250_squads"',
+  },
+  {
+    appId: "habit-tracker",
+    ts: "13:30:58",
+    type: "content.generated",
+    payload: 'event="milestone" variants=8 latency=559ms',
+  },
+  {
+    appId: "nightsky",
+    ts: "13:14:20",
+    type: "event.received",
+    payload: 'type="launch" store="android"',
+  },
+  {
+    appId: "demo-app",
+    ts: "12:58:41",
+    type: "post.skipped",
+    payload: 'platform="whatsapp" reason="user_dismissed"',
+  },
+  {
+    appId: "demo-app",
+    ts: "12:41:09",
+    type: "strategy.reranked",
+    payload: "reddit=+0.02 linkedin=+0.01",
+  },
+  {
+    appId: "focus-timer",
+    ts: "12:20:33",
+    type: "event.received",
+    payload: 'type="new_version" build="2.0.0"',
+  },
+  {
+    appId: "splitbill",
+    ts: "12:04:57",
+    type: "event.received",
+    payload: 'type="milestone" value="500_bills"',
+  },
+  {
+    appId: "demo-app",
+    ts: "11:47:52",
+    type: "post.published",
+    payload: 'platform="reddit" tone="casual" score=0.84',
+  },
+  {
+    appId: "habit-tracker",
+    ts: "11:12:04",
+    type: "post.published",
+    payload: 'platform="whatsapp" tone="casual" score=0.64',
+  },
+  {
+    appId: "nightsky",
+    ts: "10:51:38",
+    type: "content.generated",
+    payload: 'event="launch" variants=4 latency=655ms',
+  },
+  {
+    appId: "demo-app",
+    ts: "10:39:21",
+    type: "event.received",
+    payload: 'type="launch" store="ios,android"',
+  },
+  {
+    appId: "focus-timer",
+    ts: "09:58:47",
+    type: "sdk.handshake",
+    payload: 'sdk="0.4.1" platform="react-native" ok=true',
+  },
+  {
+    appId: "demo-app",
+    ts: "09:14:36",
+    type: "content.generated",
+    payload: 'event="launch" variants=8 latency=771ms',
+  },
 ];
 
 export const feedEvents: FeedEvent[] = rawFeed.map((e, i) => ({ ...e, id: `f${i + 1}` }));
@@ -773,7 +1086,7 @@ const eventTemplates: { type: string; payload: string }[] = [
   { type: "event.received", payload: 'type="milestone" value="referral_sent"' },
   { type: "content.generated", payload: 'event="milestone" variants=8 latency=624ms' },
   { type: "post.published", payload: 'platform="twitter" tone="casual" score=0.88' },
-  { type: "strategy.reranked", payload: 'twitter=+0.03 reddit=-0.01' },
+  { type: "strategy.reranked", payload: "twitter=+0.03 reddit=-0.01" },
   { type: "post.skipped", payload: 'platform="linkedin" reason="user_dismissed"' },
   { type: "sdk.heartbeat", payload: "sessions=41 queue=0 ok=true" },
 ];
@@ -794,21 +1107,31 @@ export const snippets: { id: string; label: string; language: string; code: stri
     id: "install",
     label: "Install",
     language: "bash",
-    code: `npm install @autopromo/sdk
-# or
-yarn add @autopromo/sdk`,
+    // Note: the package is not on the public npm registry yet, so the snippet
+    // leads with the install paths that actually work from this repo today.
+    code: `# From a local checkout of this repo (works today)
+npm install file:../packages/autopromo-sdk
+
+# Straight from GitHub
+npm install github:your-org/autopromo-sdk
+
+# Or vendor it: copy packages/autopromo-sdk/src into your app
+# and import from "./autopromo-sdk"
+
+# Once published to npm:
+# npm install @autopromo/sdk`,
   },
   {
     id: "init",
     label: "Initialise",
     language: "ts",
-    code: `import { AutoPromo } from "@autopromo/sdk";
+    code: `import AutoPromo from "@autopromo/sdk";
 
+// Call once at app startup.
 AutoPromo.init({
-  apiKey: process.env.AUTOPROMO_KEY!,
-  appName: "PocketRecipe",
+  appId: process.env.AUTOPROMO_APP_ID!,  // uuid from POST /api/apps
+  apiUrl: "https://autopromo.vercel.app/api",
   appUrl: "https://pocketrecipe.app",
-  defaultTone: "casual",
 });`,
   },
   {
@@ -816,26 +1139,31 @@ AutoPromo.init({
     label: "Send events",
     language: "ts",
     code: `// first launch of a fresh install
-AutoPromo.track("launch", { stores: ["ios", "android"] });
+AutoPromo.trackLaunch({ stores: ["ios", "android"] });
 
 // any product milestone you care about
-AutoPromo.track("milestone", { value: "1000_downloads", count: 1000 });
+AutoPromo.trackMilestone({ label: "1000 downloads", count: 1000 });
 
 // after a release
-AutoPromo.track("new_version", { build: "1.2.0", notes: "Offline pantry" });
+AutoPromo.trackVersion({ build: "1.2.0", notes: "Offline pantry" });
 
-// when a store review lands
-AutoPromo.track("new_review", { rating: 5, body: review.text });`,
+// when a store review lands — also returns a suggested reply
+const { replyDraft } = await AutoPromo.trackReview({
+  rating: 5,
+  text: review.body,
+});`,
   },
   {
     id: "share",
     label: "Open compose sheet",
     language: "tsx",
-    code: `const posts = await AutoPromo.getRankedPosts();
+    code: `import { Linking } from "react-native";
 
-// opens the real native compose screen, pre-filled.
-// a human always presses send.
-await AutoPromo.share(posts[0]);`,
+const posts = await AutoPromo.getRankedPosts();
+
+// Opens the real native compose screen, pre-filled, and records
+// the choice so the strategy engine learns. A human presses send.
+await AutoPromo.share(posts[0], Linking.openURL);`,
   },
 ];
 

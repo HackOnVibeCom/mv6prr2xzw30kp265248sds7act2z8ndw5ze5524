@@ -62,29 +62,24 @@ function LiveFeed() {
   const seq = useRef(0);
 
   useEffect(() => {
-    setEvents(
-      showAll ? [...feedEvents] : feedEvents.filter((e) => e.appId === app.id),
-    );
+    setEvents(showAll ? [...feedEvents] : feedEvents.filter((e) => e.appId === app.id));
     seq.current = 0;
     const t = setInterval(() => {
       seq.current += 1;
       // cycle through apps when showing all
-      const targetApp = showAll
-        ? apps[seq.current % apps.length]!.id
-        : app.id;
-      setEvents((prev) =>
-        [nextMockEvent(targetApp, seq.current), ...prev].slice(0, 80),
-      );
+      const targetApp = showAll ? apps[seq.current % apps.length]!.id : app.id;
+      setEvents((prev) => [nextMockEvent(targetApp, seq.current), ...prev].slice(0, 80));
     }, 3500);
     return () => clearInterval(t);
   }, [app.id, showAll]);
 
   const appNameMap = Object.fromEntries(apps.map((a) => [a.id, a.name]));
 
+  // Always dark — this is a terminal-style feed, independent of the theme
+  // toggle. Matches the dark theme's page background.
   return (
-    <div style={{ backgroundColor: "#1f1e14" }} className="min-h-screen">
+    <div style={{ backgroundColor: "#0f1413" }} className="min-h-screen">
       <div className="mx-auto w-full max-w-3xl px-4 py-8 font-mono text-[13px]">
-
         {/* ── Header ── */}
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -96,9 +91,7 @@ function LiveFeed() {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-200" />
             </span>
             <span className="text-amber-100">Live</span>
-            <span className="text-olive-200">
-              · {showAll ? "all apps" : app.name}
-            </span>
+            <span className="text-olive-200">· {showAll ? "all apps" : app.name}</span>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -158,13 +151,9 @@ function LiveFeed() {
             return (
               <li
                 key={e.id}
-                className={`grid gap-x-3 rounded px-2 py-1.5 ${
-                  isLive ? "ap-flash" : ""
-                }`}
+                className={`grid gap-x-3 rounded px-2 py-1.5 ${isLive ? "ap-flash" : ""}`}
                 style={{
-                  gridTemplateColumns: showAll
-                    ? "auto auto minmax(0,1fr)"
-                    : "auto minmax(0,1fr)",
+                  gridTemplateColumns: showAll ? "auto auto minmax(0,1fr)" : "auto minmax(0,1fr)",
                 }}
               >
                 <span className="shrink-0 tabular-nums text-olive-200">{e.ts}</span>

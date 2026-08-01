@@ -60,11 +60,7 @@ router.get("/", async (_req: Request, res: Response) => {
 router.get("/:appId", async (req: Request, res: Response) => {
   const { appId } = req.params;
 
-  const { data, error } = await supabase
-    .from("apps")
-    .select("*")
-    .eq("id", appId)
-    .single();
+  const { data, error } = await supabase.from("apps").select("*").eq("id", appId).single();
 
   if (error || !data) {
     return res.status(404).json({ error: "App not found" });

@@ -9,7 +9,7 @@ import type { AppRow, EventType, EventPayload } from "./types";
 export function buildGenerationPrompt(
   app: AppRow,
   eventType: EventType,
-  payload: EventPayload
+  payload: EventPayload,
 ): string {
   const isReview = eventType === "new_review";
 

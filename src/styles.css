@@ -20,9 +20,15 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  --color-mint-50: #f4fbf7;
-  --color-mint-100: #e1f5ea;
-  --color-mint-200: #c3ebd6;
+  /*
+   * Mint ramp. The low steps double as light-mode surfaces (bg-mint-50/100),
+   * so they're kept close to neutral — a heavy tint across whole panels is
+   * what made the UI look washed. The 300–600 steps stay saturated because
+   * they're only ever used for accents, icons and chart marks.
+   */
+  --color-mint-50: #f2f6f4;
+  --color-mint-100: #e6efeb;
+  --color-mint-200: #d2e4db;
   --color-mint-300: #9bdcbb;
   --color-mint-400: #6fc79c;
   --color-mint-500: #48a97d;
@@ -36,13 +42,22 @@
   --color-green-500: #186b3e;
   --color-green-600: #0f4c2c;
 
-  --color-olive-50: #f3f2e9;
-  --color-olive-100: #dedcc4;
-  --color-olive-200: #b4b389;
-  --color-olive-300: #83815a;
-  --color-olive-400: #5c5a3d;
-  --color-olive-500: #3d3b27;
-  --color-olive-600: #1f1e14;
+  /*
+   * Neutral ramp.
+   *
+   * Kept under the `olive-` name because components across the app reference
+   * these steps, but re-tuned from a brown/olive cast to a near-neutral slate
+   * with only a trace of green. Brown-grey surfaces read muddy and dated in
+   * dark mode; a neutral ramp lets the green brand hue be the only real colour
+   * on screen, which is what makes a dark UI look intentional.
+   */
+  --color-olive-50: #f6f8f7;
+  --color-olive-100: #e3e8e6;
+  --color-olive-200: #9aa4a1;
+  --color-olive-300: #6b7672;
+  --color-olive-400: #2f3835;
+  --color-olive-500: #1e2624;
+  --color-olive-600: #121716;
 
   --color-amber-50: #fdf0dd;
   --color-amber-100: #f6ce8e;
@@ -58,31 +73,84 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-ring: var(--ring);
+
+  /*
+   * shadcn/ui compatibility tokens.
+   *
+   * The components under components/ui/ ship with shadcn's vocabulary
+   * (bg-popover, text-muted-foreground, …). Without these definitions those
+   * utilities resolve to nothing — which rendered popovers and dropdowns with
+   * transparent backgrounds. Each one maps onto the AutoPromo ramps above so
+   * shadcn components inherit this design system rather than a second one.
+   */
+  --color-card: var(--surface);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-fg);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-secondary: var(--muted);
+  --color-secondary-foreground: var(--foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--surface-border);
+  --color-border: var(--surface-border);
 }
 
 :root {
   --radius: 0.625rem;
-  --background: #f4fbf7;
-  --foreground: #1f1e14;
+  /* Barely-tinted neutrals: the green reads as brand accent, not as a wash
+     over the whole page. Borders are grey rather than mint so cards have a
+     crisp edge instead of a coloured halo. */
+  --background: #f7f9f8;
+  --foreground: #131817;
   --surface: #ffffff;
-  --surface-border: #c3ebd6;
-  --muted-fg: #3d3b27;
+  --surface-border: #e2e8e6;
+  --muted-fg: #5a6664;
   --primary: #186b3e;
   --primary-hover: #0f4c2c;
-  --primary-foreground: #f4fbf7;
+  --primary-foreground: #ffffff;
   --ring: #278a52;
+
+  /* Floating layers (popover, dropdown, tooltip) must be fully opaque —
+     a translucent value lets page content show through the panel. */
+  --popover: #ffffff;
+  --muted: #f0f3f2;
+  --accent: #e8f3ed;
+  --accent-foreground: #186b3e;
+  --destructive: #b9711a;
+  --destructive-foreground: #fdf0dd;
 }
 
 .dark {
-  --background: #1f1e14;
-  --foreground: #e1f5ea;
-  --surface: #3d3b27;
-  --surface-border: #5c5a3d;
-  --muted-fg: #c3ebd6;
+  /*
+   * Dark theme.
+   *
+   * Surfaces step up in lightness as they come forward — page, then card,
+   * then popover — which is what creates depth without heavy shadows. Text is
+   * near-white rather than mint-tinted: coloured body copy is the main thing
+   * that made the previous dark theme look amateurish.
+   */
+  --background: #0f1413;
+  --foreground: #eef2f1;
+  --surface: #171e1c;
+  --surface-border: #2a3532;
+  --muted-fg: #9aa8a4;
   --primary: #4fae72;
-  --primary-hover: #278a52;
-  --primary-foreground: #0f4c2c;
-  --ring: #8fd1a6;
+  --primary-hover: #5fc084;
+  --primary-foreground: #08120d;
+  --ring: #6fc79c;
+
+  /* One step above --surface, so a floating panel reads as being above the
+     card it was opened from. */
+  --popover: #212a28;
+  --muted: #212a28;
+  --accent: #212a28;
+  --accent-foreground: #eef2f1;
+  --destructive: #e8a13b;
+  --destructive-foreground: #0f1413;
 }
 
 @layer base {

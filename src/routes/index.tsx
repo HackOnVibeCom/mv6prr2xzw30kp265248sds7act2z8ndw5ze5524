@@ -58,16 +58,16 @@ const SDK_SNIPPET = `import AutoPromo from "@autopromo/sdk";
 
 // 1. Init once at app startup
 AutoPromo.init({
-  apiKey: process.env.AUTOPROMO_KEY,
-  appName: "YourApp",
+  appId: process.env.AUTOPROMO_APP_ID,
+  apiUrl: "https://autopromo.vercel.app/api",
   appUrl: "https://yourapp.com",
 });
 
 // 2. Track product moments
-AutoPromo.track("launch");
-AutoPromo.track("milestone", { value: "1000_downloads" });
-AutoPromo.track("new_version", { build: "2.0.0" });
-AutoPromo.track("new_review", { rating: 5, body: review.text });
+AutoPromo.trackLaunch({ stores: ["ios", "android"] });
+AutoPromo.trackMilestone({ label: "1000 downloads" });
+AutoPromo.trackVersion({ build: "2.0.0", notes: "Dark mode" });
+AutoPromo.trackReview({ rating: 5, text: review.body });
 
 // 3. Open a real platform compose screen
 const posts = await AutoPromo.getRankedPosts();
@@ -135,10 +135,7 @@ function Landing() {
       <nav className="mb-14 flex items-center justify-between">
         <span className="font-display text-sm font-bold tracking-tight">AutoPromo SDK</span>
         <div className="flex items-center gap-3">
-          <Link
-            to="/docs"
-            className="text-sm text-muted-fg hover:text-foreground"
-          >
+          <Link to="/docs" className="text-sm text-muted-fg hover:text-foreground">
             Docs
           </Link>
           <Link
@@ -262,12 +259,17 @@ function Landing() {
       <section className="mt-20">
         <h2 className="font-display text-2xl font-bold">Three lines to integrate.</h2>
         <p className="mt-2 max-w-xl text-sm text-muted-fg">
-          Drop the SDK into any Expo or React Native app. Call <code className="rounded bg-mint-100 px-1 font-mono text-xs text-green-500 dark:bg-olive-500">init</code> once,
-          track the moments that matter, and let AutoPromo handle the rest.
+          Drop the SDK into any Expo or React Native app. Call{" "}
+          <code className="rounded bg-mint-100 px-1 font-mono text-xs text-green-500 dark:bg-olive-500">
+            init
+          </code>{" "}
+          once, track the moments that matter, and let AutoPromo handle the rest.
         </p>
         <div className="mt-6 overflow-hidden rounded-xl border bg-olive-600">
           <div className="flex items-center justify-between border-b border-olive-500 px-4 py-2">
-            <span className="font-mono text-[11px] text-olive-200">TypeScript · Expo / React Native</span>
+            <span className="font-mono text-[11px] text-olive-200">
+              TypeScript · Expo / React Native
+            </span>
             <button
               type="button"
               onClick={copySnippet}
@@ -302,8 +304,8 @@ function Landing() {
       <section className="mt-20">
         <h2 className="font-display text-2xl font-bold">Every platform, one click.</h2>
         <p className="mt-2 text-sm text-muted-fg">
-          No automatic posting, no API keys, no ToS risk. AutoPromo opens the platform's own
-          compose screen with the content pre-filled — a human always reviews and sends.
+          No automatic posting, no API keys, no ToS risk. AutoPromo opens the platform's own compose
+          screen with the content pre-filled — a human always reviews and sends.
         </p>
         <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-6">
           {(["Twitter", "Reddit", "WhatsApp", "LinkedIn", "Telegram", "Facebook"] as const).map(
@@ -325,9 +327,7 @@ function Landing() {
       {/* ── Pricing ── */}
       <section className="mt-20">
         <h2 className="font-display text-2xl font-bold">Pricing</h2>
-        <p className="mt-2 text-sm text-muted-fg">
-          Start free. No credit card required to try.
-        </p>
+        <p className="mt-2 text-sm text-muted-fg">Start free. No credit card required to try.</p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {PRICING.map((plan) => (
             <div
@@ -380,7 +380,8 @@ function Landing() {
             <p className="mt-2 text-sm leading-relaxed text-muted-fg">
               The Strategy Engine starts with sensible defaults for which platform fits which event,
               then learns from your team's actual publishing choices. Over time it surfaces the
-              platforms and tones that work for your specific app's audience — not a generic template.
+              platforms and tones that work for your specific app's audience — not a generic
+              template.
             </p>
             <p className="mt-3 font-mono text-[11px] text-muted-fg">
               score = base_weight(event, platform) + 0.5 × (chosen / shown)
@@ -402,9 +403,15 @@ function Landing() {
       <footer className="mt-20 flex flex-wrap items-center justify-between gap-4 border-t pt-8 text-xs text-muted-fg">
         <span className="font-display font-bold">AutoPromo SDK</span>
         <div className="flex gap-4">
-          <Link to="/apps" className="hover:underline">Dashboard</Link>
-          <Link to="/docs" className="hover:underline">Docs</Link>
-          <Link to="/live/$appId" params={{ appId: "demo-app" }} className="hover:underline">Live feed</Link>
+          <Link to="/apps" className="hover:underline">
+            Dashboard
+          </Link>
+          <Link to="/docs" className="hover:underline">
+            Docs
+          </Link>
+          <Link to="/live/$appId" params={{ appId: "demo-app" }} className="hover:underline">
+            Live feed
+          </Link>
         </div>
         <span>HackOnVibe 2026 · Built with 100% free-tier services</span>
       </footer>

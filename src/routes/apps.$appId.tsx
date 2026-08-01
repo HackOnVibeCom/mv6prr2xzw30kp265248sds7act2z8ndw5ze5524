@@ -1,16 +1,40 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link, notFound, Outlet, useChildMatches } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Zap, Copy, Check } from "lucide-react";
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import {
+  Zap,
+  Copy,
+  Check,
+  Inbox,
+  Loader2,
+  Download,
+  Sparkles,
+  Send,
+  Star,
+  Wand2,
+  CreditCard,
+  Lock,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { PostCard } from "@/components/PostCard";
+import { PostCardSkeletonGrid } from "@/components/PostCardSkeleton";
+import { EmptyState } from "@/components/EmptyState";
+import { StatTile, StatRow } from "@/components/StatTile";
+import { EventTimeline, type TimelineItem } from "@/components/EventTimeline";
+import { StatsChart } from "@/components/StatsChart";
+import { FallbackNotice } from "@/components/ConnectionBadge";
+import { CreateAdModal } from "@/components/CreateAdModal";
+import { CreatePostModal } from "@/components/CreatePostModal";
+import { PaymentSandboxModal } from "@/components/PaymentSandboxModal";
+import { getStoredSandboxPlan, PLANS, isPostLimitReached, type PlanTier } from "@/lib/sandboxPlan";
+import { useDarkMode } from "@/hooks/useDarkMode";
+import { isSeedApp, useApp, useMarkChosen, usePosts, useTrackEvent } from "@/lib/queries";
+import { toWireEvent } from "@/lib/adapters";
 import {
   EVENTS,
   PLATFORMS,
   activity,
   getApp,
-  getPosts,
   getReviews,
   platformStats,
   toneStats,
@@ -21,12 +45,12 @@ import {
 
 export const Route = createFileRoute("/apps/$appId")({
   loader: ({ params }) => {
-    const app = getApp(params.appId);
-    if (!app) throw notFound();
-    return { app };
+    // Seed apps resolve here for instant meta tags; live apps load in the
+    // component and may legitimately not be in the seed set.
+    return { seedApp: getApp(params.appId) ?? null };
   },
   head: ({ loaderData }) => {
-    const name = loaderData?.app.name ?? "App";
+    const name = loaderData?.seedApp?.name ?? "App";
     return {
       meta: [
         { title: `${name} — AutoPromo dashboard` },
@@ -45,130 +69,62 @@ export const Route = createFileRoute("/apps/$appId")({
   component: Dashboard,
 });
 
-/** Posts that appear when manually triggering an event from the dashboard */
-const TRIGGER_POSTS: Record<EventType, Omit<Post, "id" | "appId" | "createdAt">[]> = {
-  Launch: [
-    {
-      platform: "Twitter",
-      tone: "hype",
-      event: "Launch",
-      score: 0.94,
-      hashtags: ["#buildinpublic", "#launch"],
-      content:
-        "🚀 We just went live! After months of building, the app is officially in your hands. Try it free — link in bio.",
-    },
-    {
-      platform: "Reddit",
-      tone: "casual",
-      event: "Launch",
-      score: 0.81,
-      hashtags: [],
-      content:
-        "Launching today after building solo for six months. Would love brutal feedback from this community — what's broken, what's missing, what made you smile.",
-    },
-    {
-      platform: "LinkedIn",
-      tone: "professional",
-      event: "Launch",
-      score: 0.75,
-      hashtags: ["#productlaunch"],
-      content:
-        "Proud to share we've officially launched. Built to solve a problem we couldn't find a good answer for — here's what we shipped and why.",
-    },
-  ],
-  Milestone: [
-    {
-      platform: "Twitter",
-      tone: "hype",
-      event: "Milestone",
-      score: 0.96,
-      hashtags: ["#1000users", "#indieapp"],
-      content:
-        "1,000 users 🎉 A thousand real people chose to use what we built. Genuinely surreal. Thank you all — this is just the start.",
-    },
-    {
-      platform: "WhatsApp",
-      tone: "casual",
-      event: "Milestone",
-      score: 0.78,
-      hashtags: [],
-      content:
-        "Just hit a big milestone with the app — 1,000 people using it! If you haven't tried it yet, now's a great time 👉 [LINK]",
-    },
-    {
-      platform: "LinkedIn",
-      tone: "professional",
-      event: "Milestone",
-      score: 0.82,
-      hashtags: ["#growth"],
-      content:
-        "1,000 active users reached. Looking at the data: the retention lift from last week's UX fix was larger than the lift from our launch post. Lesson noted.",
-    },
-  ],
-  "New version": [
-    {
-      platform: "Twitter",
-      tone: "casual",
-      event: "New version",
-      score: 0.77,
-      hashtags: ["#update"],
-      content:
-        "v2.0 just dropped. Biggest release since launch — we rewrote the core and it's noticeably faster. Update is live on both stores.",
-    },
-    {
-      platform: "Reddit",
-      tone: "technical",
-      event: "New version",
-      score: 0.69,
-      hashtags: [],
-      content:
-        "v2.0 changelog: migrated storage layer from SQLite to a CRDT-based sync engine, reduced cold-start by 40%, added offline-first support. Full diff and known regressions in comments.",
-    },
-    {
-      platform: "Telegram",
-      tone: "casual",
-      event: "New version",
-      score: 0.61,
-      hashtags: [],
-      content:
-        "Big update just landed! v2.0 is faster, works offline, and fixes the bug everyone kept messaging us about. Grab it from the store 🙏",
-    },
-  ],
-  "New review": [
-    {
-      platform: "Twitter",
-      tone: "casual",
-      event: "New review",
-      score: 0.71,
-      hashtags: [],
-      content:
-        '⭐⭐⭐⭐⭐ "This is the only app I\'ve kept on my phone for longer than a week." We\'ll take it. Free on both stores.',
-    },
-    {
-      platform: "LinkedIn",
-      tone: "professional",
-      event: "New review",
-      score: 0.65,
-      hashtags: [],
-      content:
-        "Five-star review this morning: a user described exactly the problem we set out to solve. When product and pain align, people notice.",
-    },
-  ],
-};
+/** Returns payloads sent to POST /api/event customized for each specific app. */
+function getAppEventPayload(app: App | undefined, eventType: EventType): Record<string, unknown> {
+  const appId = app?.id;
+  const name = app?.name ?? "App";
 
-const NEW_REVIEW_REPLY =
-  "Thanks so much for the kind words — hearing this from real users is what keeps us going. If you ever run into anything or have a feature request, drop us a line at support@autopromo.app 🙏";
+  if (appId === "demo-app") {
+    switch (eventType) {
+      case "Launch": return { stores: ["ios", "android"], category: "Food & Drink" };
+      case "Milestone": return { label: "1,000 fridge scans", count: 1000 };
+      case "New version": return { build: "1.2.0", notes: "Offline CRDT pantry sync & MobileNetV3 ingredient detection" };
+      case "New review": return { rating: 5, text: "Used it four nights in a row and didn't order takeaway once!" };
+    }
+  } else if (appId === "focus-timer") {
+    switch (eventType) {
+      case "Launch": return { stores: ["android", "ios"], platform: "React Native" };
+      case "Milestone": return { label: "5,000 completed sessions", count: 5000 };
+      case "New version": return { build: "2.0.0", notes: "Custom app blocklists & weekly focus analytics report" };
+      case "New review": return { rating: 5, text: "First timer app I haven't uninstalled by Wednesday." };
+    }
+  } else if (appId === "habit-tracker") {
+    switch (eventType) {
+      case "Launch": return { stores: ["ios", "android"], platform: "Flutter" };
+      case "Milestone": return { label: "250 active squad teams", count: 250 };
+      case "New version": return { build: "1.4.0", notes: "Monthly cover days & shareable squad invite links" };
+      case "New review": return { rating: 5, text: "My squad noticed I had stopped before I did!" };
+    }
+  } else if (appId === "splitbill") {
+    switch (eventType) {
+      case "Launch": return { stores: ["ios"], platform: "Swift" };
+      case "Milestone": return { label: "500 restaurant bills split", count: 500 };
+      case "New version": return { build: "1.1.0", notes: "On-device receipt OCR update & tip splitting algorithm" };
+      case "New review": return { rating: 5, text: "Paid off the whole table before the waiter came back!" };
+    }
+  } else if (appId === "nightsky") {
+    switch (eventType) {
+      case "Launch": return { stores: ["android", "ios"], platform: "Unity" };
+      case "Milestone": return { label: "10,000 stars plate-solved", count: 10000 };
+      case "New version": return { build: "1.0.4", notes: "Offline 12MB star catalogue update & Starlink TLE refresh" };
+      case "New review": return { rating: 5, text: "Took it camping with zero signal and my kids identified 6 constellations!" };
+    }
+  }
+
+  // Generic fallback for custom created apps
+  switch (eventType) {
+    case "Launch": return { stores: ["ios", "android"], appName: name };
+    case "Milestone": return { label: "1,000 active users", count: 1000 };
+    case "New version": return { build: "2.0.0", notes: `Major update for ${name}` };
+    case "New review": return { rating: 5, text: `Loving using ${name} every day!` };
+  }
+}
+
+/** Views available in the sidebar's strategy-engine card. */
+const SIDEBAR_TABS = ["platform", "tone", "week"] as const;
+type SidebarTab = (typeof SIDEBAR_TABS)[number];
 
 /* -------------------------------------------------------------------------- */
-
-function Stat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="rounded-xl border bg-surface p-4">
-      <p className="font-display text-xl font-bold">{value}</p>
-      <p className="mt-0.5 text-xs text-muted-fg">{label}</p>
-    </div>
-  );
-}
 
 function ScoreBar({
   label,
@@ -245,62 +201,146 @@ function SuggestedReplyCard({ replyText }: { replyText: string }) {
 /* -------------------------------------------------------------------------- */
 
 function Dashboard() {
-  const { app } = Route.useLoaderData();
+  const { appId } = Route.useParams();
+  const childMatches = useChildMatches();
+  const dark = useDarkMode();
+
+  const { data: appResult, isLoading: appLoading } = useApp(appId);
+  const { data: postsResult, isLoading: postsLoading } = usePosts(appId);
+  const trackEvent = useTrackEvent(appId);
+  const markChosen = useMarkChosen(appId);
+
   const [filterEvent, setFilterEvent] = useState<EventType | "All">("All");
   const [filterPlatform, setFilterPlatform] = useState<Platform | "All">("All");
-  const [triggered, setTriggered] = useState<EventType | null>(null);
-  const [triggerPosts, setTriggerPosts] = useState<Post[]>([]);
-  const [runId, setRunId] = useState(0);
+  const [lastTriggered, setLastTriggered] = useState<EventType | null>(null);
+  const [replyDraft, setReplyDraft] = useState<string | null>(null);
+  const [sideTab, setSideTab] = useState<SidebarTab>("platform");
+  const [isAdModalOpen, setIsAdModalOpen] = useState(false);
+  const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
+  const [sandboxPlan, setSandboxPlan] = useState<PlanTier>("builder");
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-  const basePosts = useMemo(() => {
-    return getPosts(app.id)
-      .filter(
-        (p) =>
-          (filterEvent === "All" || p.event === filterEvent) &&
-          (filterPlatform === "All" || p.platform === filterPlatform),
-      )
-      .sort((a, b) => b.score - a.score);
-  }, [app.id, filterEvent, filterPlatform]);
+  useEffect(() => {
+    setSandboxPlan(getStoredSandboxPlan());
+  }, []);
 
-  const triggeredFiltered = useMemo(() => {
-    return triggerPosts.filter(
-      (p) =>
-        (filterEvent === "All" || p.event === filterEvent) &&
-        (filterPlatform === "All" || p.platform === filterPlatform),
-    );
-  }, [triggerPosts, filterEvent, filterPlatform]);
+  if (childMatches.length > 0) {
+    return <Outlet />;
+  }
 
-  const allPosts = useMemo(
-    () => [...triggeredFiltered, ...basePosts],
-    [triggeredFiltered, basePosts],
+  const app = appResult?.data;
+  const allPosts = useMemo(() => postsResult?.data ?? [], [postsResult]);
+
+  const posts = useMemo(
+    () =>
+      allPosts
+        .filter(
+          (p) =>
+            (filterEvent === "All" || p.event === filterEvent) &&
+            (filterPlatform === "All" || p.platform === filterPlatform),
+        )
+        .sort((a, b) => b.score - a.score),
+    [allPosts, filterEvent, filterPlatform],
   );
 
-  function handleTrigger(eventType: EventType) {
-    const seeds = TRIGGER_POSTS[eventType] ?? [];
-    const newPosts: Post[] = seeds.map((s, i) => ({
-      ...s,
-      id: `triggered-${eventType}-${Date.now()}-${i}`,
-      appId: app.id,
-      createdAt: new Date().toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    }));
-    setTriggered(eventType);
-    setTriggerPosts((prev) => [...newPosts, ...prev]);
-    setRunId((r) => r + 1);
-    toast.success(`${seeds.length} posts generated for "${eventType}"`, {
-      description: "Strategy engine ranked them — top pick shown first.",
+  /** Groups posts by their originating event to build the timeline. */
+  const timeline = useMemo<TimelineItem[]>(() => {
+    const groups = new Map<string, Post[]>();
+    for (const p of allPosts) {
+      const key = p.eventId ?? `seed-${p.event}`;
+      const list = groups.get(key);
+      if (list) list.push(p);
+      else groups.set(key, [p]);
+    }
+
+    return [...groups.entries()]
+      .map(([id, group]) => ({
+        id,
+        event: group[0]!.event,
+        time: group[0]!.createdAt,
+        variants: group.length,
+        published: group.filter((p) => p.chosen).length,
+      }))
+      .sort((a, b) => b.time.localeCompare(a.time))
+      .slice(0, 8);
+  }, [allPosts]);
+
+  // Prefer counts derived from the posts actually loaded; fall back to the
+  // app record's totals when there are none (e.g. a brand-new live app).
+  const generated = allPosts.length || app?.postsGenerated || 0;
+  const published = allPosts.filter((p) => p.chosen).length || app?.postsPublished || 0;
+  const publishRate = generated > 0 ? Math.round((published / generated) * 100) : 0;
+
+  async function handleTrigger(eventType: EventType) {
+    setLastTriggered(eventType);
+    setReplyDraft(null);
+
+    try {
+      const result = await trackEvent.mutateAsync({
+        type: toWireEvent(eventType),
+        payload: getAppEventPayload(app, eventType),
+      });
+
+      if (result.replyDraft) setReplyDraft(result.replyDraft);
+
+      toast.success(`${result.generated ?? 0} posts generated for "${eventType}"`, {
+        description: "Strategy engine ranked them — top pick shown first.",
+      });
+    } catch (err) {
+      toast.error("Event failed", {
+        description:
+          err instanceof Error ? err.message : "Check that the API server in server/ is running.",
+      });
+    }
+  }
+
+  function handlePublish(post: Post) {
+    markChosen.mutate(post, {
+      onError: () => {
+        // The compose window already opened, so this is informational only.
+        toast.error("Couldn't record the choice", {
+          description: "The post still opened — only the strategy stats are affected.",
+        });
+      },
     });
   }
 
-  const stats = platformStats[app.id] ?? [];
-  const tones = toneStats[app.id] ?? [];
-  const week = activity[app.id] ?? [];
-  const reviews = getReviews(app.id);
+  /**
+   * platformStats / toneStats / activity / reviews only exist in the bundled
+   * demo dataset. For a real app they are simply absent — showing another
+   * app's numbers would present fabricated metrics as real telemetry.
+   */
+  const isDemo = app?.isDemo ?? isSeedApp(appId);
+  const stats = isDemo ? (platformStats[appId] ?? []) : [];
+  const tones = isDemo ? (toneStats[appId] ?? []) : [];
+  const week = isDemo ? (activity[appId] ?? []) : [];
+  const reviews = isDemo ? getReviews(appId) : [];
 
   const showReplyCard =
-    (triggered === "New review" || filterEvent === "New review") && allPosts.length > 0;
+    replyDraft !== null ||
+    ((lastTriggered === "New review" || filterEvent === "New review") && posts.length > 0);
+
+  const replyText =
+    replyDraft ??
+    "Thanks so much for the kind words — hearing this from real users is what keeps us going. If you ever run into anything or have a feature request, drop us a line at support@autopromo.app 🙏";
+
+  if (appLoading) {
+    return (
+      <AppShell title="Loading">
+        <div className="h-8 w-56 animate-pulse rounded bg-mint-200 dark:bg-olive-400" />
+        <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="h-20 animate-pulse rounded-xl border bg-surface" />
+          ))}
+        </div>
+        <div className="mt-6">
+          <PostCardSkeletonGrid />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!app) throw notFound();
 
   return (
     <AppShell title={app.name} liveAppId={app.id}>
@@ -320,55 +360,177 @@ function Dashboard() {
             >
               {app.status}
             </span>
+            {isDemo && (
+              <span
+                title="Bundled showcase app — its installs, rating and reviews are sample data"
+                className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-300"
+              >
+                demo
+              </span>
+            )}
           </div>
           <p className="mt-1 text-sm text-muted-fg">{app.description}</p>
           <p className="mt-1 font-mono text-[11px] text-olive-300 dark:text-olive-200">
             sdk {app.sdkVersion} · {app.platform} · connected {app.connectedAt}
           </p>
         </div>
-        <Link
-          to="/docs"
-          className="ap-press rounded-lg border px-3 py-2 text-sm font-medium hover:bg-mint-100 dark:hover:bg-olive-500"
-        >
-          Integration guide
-        </Link>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsAdModalOpen(true)}
+            className="ap-press inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover shadow-sm"
+          >
+            <Wand2 className="h-3.5 w-3.5" />
+            Create ad
+          </button>
+          <Link
+            to="/docs"
+            className="ap-press rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:bg-mint-100 dark:hover:bg-olive-500"
+          >
+            Integration guide
+          </Link>
+        </div>
       </header>
 
-      {/* ── Stats row ── */}
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Installs" value={app.installs.toLocaleString()} />
-        <Stat label="Posts generated" value={app.postsGenerated + triggerPosts.length} />
-        <Stat label="Posts published" value={app.postsPublished} />
-        <Stat label="Store rating" value={app.rating.toFixed(1)} />
+      <FallbackNotice className="mt-4" />
+
+      {/* ── Monthly Post Allowance Progress Bar ── */}
+      <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-300">
+              {PLANS[sandboxPlan].badge}
+            </span>
+            <span className="text-xs font-semibold">
+              Monthly Post Allowance: {app.postsGenerated} / {PLANS[sandboxPlan].postsLimit === 999999 ? "∞ Unlimited" : PLANS[sandboxPlan].postsLimit}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsPaymentModalOpen(true)}
+            className="ap-press inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/20"
+          >
+            <CreditCard className="h-3.5 w-3.5" />
+            Manage Sandbox Plan ({PLANS[sandboxPlan].name})
+          </button>
+        </div>
+        {PLANS[sandboxPlan].postsLimit !== 999999 && (
+          <div className="mt-2 h-1.5 w-full rounded-full bg-emerald-500/10">
+            <div
+              className="h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all"
+              style={{
+                width: `${Math.min(100, (app.postsGenerated / PLANS[sandboxPlan].postsLimit) * 100)}%`,
+              }}
+            />
+          </div>
+        )}
       </div>
+
+      {/* ── Stats row ── */}
+      <div className="mt-6">
+        <StatRow>
+          <StatTile
+            icon={Download}
+            label="Installs"
+            value={app.installs > 0 ? app.installs.toLocaleString() : "—"}
+            hint={
+              app.installs > 0
+                ? "lifetime, all stores"
+                : "connect a store to report installs"
+            }
+          />
+          <StatTile
+            icon={Sparkles}
+            label="Posts generated"
+            value={generated}
+            hint={`across ${timeline.length || 0} ${timeline.length === 1 ? "event" : "events"}`}
+          />
+          <StatTile
+            icon={Send}
+            label="Posts published"
+            value={published}
+            hint={generated > 0 ? `${publishRate}% of generated` : "none yet"}
+            emphasis={published > 0}
+          />
+          <StatTile
+            icon={Star}
+            label="Store rating"
+            value={app.rating ? app.rating.toFixed(1) : "—"}
+            unit={app.rating ? "/ 5" : undefined}
+            hint={reviews.length > 0 ? `${reviews.length} recent reviews` : "no reviews synced"}
+          />
+        </StatRow>
+      </div>
+
+      {/* A live app has no store telemetry wired up — say so once, plainly,
+          instead of leaving dashes unexplained. */}
+      {!isDemo && (
+        <p className="mt-2 text-xs text-muted-fg">
+          Installs and store rating need an App Store / Play Store connection — AutoPromo only
+          receives the product events your SDK sends.
+        </p>
+      )}
 
       {/* ── Trigger event bar ── */}
-      <div className="mt-6 rounded-xl border border-mint-300 bg-mint-50 p-4 dark:border-olive-400 dark:bg-olive-500">
-        <p className="mb-3 text-xs font-semibold text-muted-fg">
-          Simulate an SDK event — new posts will appear above existing ones, ranked by the strategy
-          engine
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {EVENTS.map((e) => (
-            <button
-              key={e}
-              type="button"
-              onClick={() => handleTrigger(e)}
-              className={`ap-press inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                triggered === e
-                  ? "border-green-300 bg-green-50 text-green-500 dark:bg-olive-400 dark:text-mint-200"
-                  : "hover:bg-mint-100 dark:hover:bg-olive-400"
-              }`}
-            >
-              <Zap className="h-3.5 w-3.5" />
-              {e}
-            </button>
-          ))}
+      <section
+        aria-label="Generate AI posts and threads"
+        className="mt-6 rounded-xl border border-mint-300 bg-mint-50/60 p-4.5 dark:border-olive-400 dark:bg-olive-500 shadow-sm"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-mint-100 text-green-500 dark:bg-olive-400 dark:text-mint-200">
+                <Sparkles className="h-4 w-4" />
+              </span>
+              <h2 className="font-display text-sm font-semibold">Generate AI Posts & Threads</h2>
+            </div>
+            <p className="mt-1 text-xs text-muted-fg">
+              Type custom release notes, pick target platforms (Twitter/X, LinkedIn, Reddit, WhatsApp, Telegram, Facebook), and let AI generate tailored threads.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsCreatePostModalOpen(true)}
+            className="ap-press inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-mint-300" />
+            Create Custom Post / Thread
+          </button>
         </div>
-      </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-3.5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-fg">Quick SDK Triggers:</span>
+          {EVENTS.map((e) => {
+            const pending = trackEvent.isPending && lastTriggered === e;
+            return (
+              <button
+                key={e}
+                type="button"
+                disabled={trackEvent.isPending}
+                onClick={() => handleTrigger(e)}
+                className={`ap-press inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all disabled:opacity-50 ${
+                  lastTriggered === e
+                    ? "border-emerald-500 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 shadow-sm"
+                    : "border-border bg-surface text-muted-fg hover:border-emerald-500/50 hover:bg-muted"
+                }`}
+              >
+                {pending ? (
+                  <Loader2 className="h-3 w-3 animate-spin text-emerald-500" />
+                ) : (
+                  <Zap className="h-3 w-3 text-emerald-500" />
+                )}
+                {e}
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       {/* ── Filter bar ── */}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-b pb-3">
+        <span className="text-xs font-medium text-muted-fg">Filter</span>
+
         <label className="sr-only" htmlFor="filter-event">
           Filter by event
         </label>
@@ -376,7 +538,7 @@ function Dashboard() {
           id="filter-event"
           value={filterEvent}
           onChange={(e) => setFilterEvent(e.target.value as EventType | "All")}
-          className="rounded-lg border bg-surface px-3 py-2 text-sm"
+          className="cursor-pointer rounded-lg border bg-surface px-3 py-1.5 text-sm transition-colors hover:border-mint-400 dark:hover:border-olive-300"
         >
           <option value="All">All events</option>
           {EVENTS.map((e) => (
@@ -385,6 +547,7 @@ function Dashboard() {
             </option>
           ))}
         </select>
+
         <label className="sr-only" htmlFor="filter-platform">
           Filter by platform
         </label>
@@ -392,7 +555,7 @@ function Dashboard() {
           id="filter-platform"
           value={filterPlatform}
           onChange={(e) => setFilterPlatform(e.target.value as Platform | "All")}
-          className="rounded-lg border bg-surface px-3 py-2 text-sm"
+          className="cursor-pointer rounded-lg border bg-surface px-3 py-1.5 text-sm transition-colors hover:border-mint-400 dark:hover:border-olive-300"
         >
           <option value="All">All platforms</option>
           {PLATFORMS.map((p) => (
@@ -401,171 +564,262 @@ function Dashboard() {
             </option>
           ))}
         </select>
-        <span className="text-xs text-muted-fg">
-          {allPosts.length} ranked {allPosts.length === 1 ? "post" : "posts"}
-        </span>
-        {triggerPosts.length > 0 && (
+
+        {(filterEvent !== "All" || filterPlatform !== "All") && (
           <button
             type="button"
             onClick={() => {
-              setTriggerPosts([]);
-              setTriggered(null);
-              setRunId((r) => r + 1);
+              setFilterEvent("All");
+              setFilterPlatform("All");
             }}
-            className="text-xs text-green-400 hover:underline dark:text-mint-300"
+            className="ap-press rounded-lg px-2 py-1 text-xs font-medium text-green-500 transition-colors hover:bg-mint-100 dark:text-mint-200 dark:hover:bg-olive-500"
           >
-            clear simulated
+            Clear
           </button>
         )}
+
+        <span aria-live="polite" className="ml-auto text-xs tabular-nums text-muted-fg">
+          {posts.length}
+          {posts.length !== allPosts.length && ` of ${allPosts.length}`} ranked{" "}
+          {posts.length === 1 ? "post" : "posts"}
+        </span>
       </div>
 
       {/* ── Main content ── */}
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-        <section key={`${filterEvent}-${filterPlatform}-${runId}`} className="min-w-0">
-          {allPosts.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-mint-300 bg-mint-50 p-8 text-center dark:border-olive-400 dark:bg-olive-500">
-              <p className="font-display text-base font-semibold">No posts yet for this filter</p>
-              <p className="mt-1 text-sm text-muted-fg">
-                Trigger an event above to generate your first posts, or try a different filter.
-              </p>
-            </div>
+      <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <section className="min-w-0">
+          {postsLoading ? (
+            <PostCardSkeletonGrid />
+          ) : posts.length === 0 ? (
+            <EmptyState
+              icon={Inbox}
+              title={
+                allPosts.length === 0 ? "No posts generated yet" : "No posts match this filter"
+              }
+              body={
+                allPosts.length === 0
+                  ? "Fire an event above and the AI-generated variants will appear here, ranked best first."
+                  : "Try a different event or platform, or clear the filters."
+              }
+            />
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {showReplyCard && <SuggestedReplyCard replyText={NEW_REVIEW_REPLY} />}
-              {allPosts.map((p, i) => (
+              {showReplyCard && <SuggestedReplyCard replyText={replyText} />}
+              {posts.map((p, i) => (
                 <PostCard
-                  key={`${p.id}-${runId}`}
+                  key={p.id}
                   post={p}
                   appUrl={app.url}
                   topPick={!showReplyCard && i === 0}
+                  stats={stats}
+                  onPublish={handlePublish}
                 />
               ))}
             </div>
           )}
 
+          {/* ── Event history ── */}
+          {timeline.length > 0 && (
+            <>
+              <h2 className="mt-10 font-display text-lg font-semibold">Event history</h2>
+              <p className="mt-1 mb-4 text-sm text-muted-fg">
+                Each product moment and what it produced.
+              </p>
+              <EventTimeline items={timeline} appId={app.id} />
+            </>
+          )}
+
           {/* ── Reviews ── */}
-          <h2 className="mt-10 font-display text-lg font-semibold">Recent store reviews</h2>
-          <ul className="mt-3 grid gap-3 md:grid-cols-2">
-            {reviews.map((r) => (
-              <li key={r.id} className="rounded-xl border bg-surface p-4">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium">@{r.author}</span>
-                  <span className="text-amber-300">{"★".repeat(r.rating)}</span>
-                </div>
-                <p className="mt-2 text-sm leading-relaxed text-muted-fg">{r.body}</p>
-                <p className="mt-2 font-mono text-[11px] text-olive-300 dark:text-olive-200">
-                  {r.store} · {r.date}
-                </p>
-              </li>
-            ))}
-            {reviews.length === 0 && (
-              <li className="text-sm text-muted-fg">No reviews synced yet.</li>
-            )}
-          </ul>
+          {reviews.length > 0 && (
+            <>
+              <h2 className="mt-10 font-display text-lg font-semibold">Recent store reviews</h2>
+              <ul className="mt-3 grid gap-3 md:grid-cols-2">
+                {reviews.map((r) => (
+                  <li
+                    key={r.id}
+                    className="rounded-xl border bg-surface p-4 transition-colors hover:border-mint-400 dark:hover:border-olive-300"
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium">@{r.author}</span>
+                      <span className="text-amber-300">{"★".repeat(r.rating)}</span>
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-fg">{r.body}</p>
+                    <p className="mt-2 font-mono text-[11px] text-olive-300 dark:text-olive-200">
+                      {r.store} · {r.date}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
 
         {/* ── Sidebar ── */}
-        <aside className="space-y-6">
-          {/* Strategy engine */}
-          <div className="rounded-xl border bg-mint-50 p-4 dark:bg-olive-500">
-            <h2 className="font-display text-sm font-semibold">Strategy engine</h2>
-            <p className="mt-1 text-xs text-muted-fg">
-              Platforms your team actually publishes to get ranked higher over time.
-            </p>
-            <ul className="mt-4 space-y-3">
-              {stats.map((s) => (
-                <ScoreBar
-                  key={s.platform}
-                  label={s.platform}
-                  pct={Math.round((s.chosen / s.shown) * 100)}
-                  chosen={s.chosen}
-                  shown={s.shown}
-                />
-              ))}
-            </ul>
-            <p className="mt-4 font-mono text-[10px] leading-relaxed text-muted-fg">
-              score = base_weight(event, platform)
-              <br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 0.5 × (chosen / shown)
-            </p>
-          </div>
-
-          {/* Tone preference */}
-          <div className="rounded-xl border bg-surface p-4">
-            <h2 className="font-display text-sm font-semibold">Tone preference</h2>
-            <ul className="mt-3 space-y-2.5">
-              {tones.map((t) => {
-                const pct = Math.round((t.chosen / t.shown) * 100);
-                return (
-                  <li key={t.tone}>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="capitalize">{t.tone}</span>
-                      <span className="font-mono text-olive-300 dark:text-olive-200">{pct}%</span>
-                    </div>
-                    <div className="mt-1 h-1.5 w-full rounded-full bg-mint-200 dark:bg-olive-400">
-                      <div
-                        className="h-1.5 rounded-full bg-green-200 transition-all duration-500"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-
-          {/* Weekly chart */}
-          <div className="rounded-xl border bg-surface p-4">
-            <h2 className="font-display text-sm font-semibold">This week</h2>
-            <div className="mt-4 h-32">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={week} barGap={2} barCategoryGap="20%">
-                  <XAxis
-                    dataKey="day"
-                    tick={{ fontSize: 10, fill: "var(--color-muted-fg)" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: "var(--color-surface)",
-                      border: "1px solid var(--color-surface-border)",
-                      borderRadius: "8px",
-                      fontSize: 12,
-                    }}
-                  />
-                  <Bar
-                    dataKey="generated"
-                    name="Generated"
-                    fill="var(--color-mint-300)"
-                    radius={[3, 3, 0, 0]}
-                  >
-                    {week.map((_, i) => (
-                      <Cell key={i} />
-                    ))}
-                  </Bar>
-                  <Bar
-                    dataKey="published"
-                    name="Published"
-                    fill="var(--color-green-300)"
-                    radius={[3, 3, 0, 0]}
-                  >
-                    {week.map((_, i) => (
-                      <Cell key={i} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+        <aside className="min-w-0 space-y-4 xl:sticky xl:top-20">
+          {/* Strategy engine — tabbed so platform / tone / week share one card
+              instead of three stacked boxes repeating the same numbers. */}
+          <div className="overflow-hidden rounded-xl border bg-surface">
+            <div className="border-b bg-mint-50 px-4 py-3 dark:bg-olive-500">
+              <h2 className="font-display text-sm font-semibold">Strategy engine</h2>
+              <p className="mt-0.5 text-xs text-muted-fg">
+                What your team publishes gets ranked higher.
+              </p>
             </div>
-            <p className="mt-2 text-[11px] text-muted-fg">
-              <span className="mr-1 inline-block h-2 w-2 rounded-sm bg-mint-300" />
-              Generated
-              <span className="ml-3 mr-1 inline-block h-2 w-2 rounded-sm bg-green-300" />
-              Published
-            </p>
+
+            <div
+              role="tablist"
+              aria-label="Strategy engine views"
+              className="flex border-b text-xs"
+            >
+              {SIDEBAR_TABS.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  role="tab"
+                  aria-selected={sideTab === t}
+                  onClick={() => setSideTab(t)}
+                  className={`flex-1 px-2 py-2 font-medium capitalize transition-colors ${
+                    sideTab === t
+                      ? "border-b-2 border-green-400 text-green-500 dark:border-mint-300 dark:text-mint-200"
+                      : "text-muted-fg hover:bg-mint-50 dark:hover:bg-olive-500"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-4">
+              {sideTab === "platform" &&
+                (stats.length === 0 ? (
+                  <p className="text-xs text-muted-fg">
+                    No signal yet — publish a post to start teaching it.
+                  </p>
+                ) : (
+                  <>
+                    <ul className="space-y-3">
+                      {stats.map((s) => (
+                        <ScoreBar
+                          key={s.platform}
+                          label={s.platform}
+                          pct={Math.round((s.chosen / Math.max(s.shown, 1)) * 100)}
+                          chosen={s.chosen}
+                          shown={s.shown}
+                        />
+                      ))}
+                    </ul>
+                    <p className="mt-4 border-t pt-3 font-mono text-[10px] leading-relaxed text-muted-fg">
+                      score = base_weight(event, platform)
+                      <br />
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ 0.5 × (chosen / shown)
+                    </p>
+                  </>
+                ))}
+
+              {sideTab === "tone" &&
+                (tones.length === 0 ? (
+                  <p className="text-xs text-muted-fg">No tone data yet.</p>
+                ) : (
+                  <ul className="space-y-2.5">
+                    {tones.map((t) => {
+                      const pct = Math.round((t.chosen / Math.max(t.shown, 1)) * 100);
+                      return (
+                        <li key={t.tone}>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="capitalize">{t.tone}</span>
+                            <span
+                              className="cursor-help font-mono text-olive-300 dark:text-olive-200"
+                              title={`${t.chosen} published of ${t.shown} shown`}
+                            >
+                              {pct}%
+                            </span>
+                          </div>
+                          <div className="mt-1 h-1.5 w-full rounded-full bg-mint-200 dark:bg-olive-400">
+                            <div
+                              className="h-1.5 rounded-full bg-green-200 transition-all duration-500"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ))}
+
+              {sideTab === "week" &&
+                (week.length === 0 ? (
+                  <p className="text-xs text-muted-fg">No activity recorded this week.</p>
+                ) : (
+                  <>
+                    <ul className="space-y-2">
+                      {week.map((d) => {
+                        const max = Math.max(...week.map((w) => w.generated), 1);
+                        return (
+                          <li key={d.day} className="flex items-center gap-2 text-xs">
+                            <span className="w-8 shrink-0 text-muted-fg">{d.day}</span>
+                            <span className="flex h-4 flex-1 overflow-hidden rounded-sm bg-mint-100 dark:bg-olive-400">
+                              <span
+                                className="bg-mint-300 transition-all duration-500"
+                                style={{ width: `${(d.generated / max) * 100}%` }}
+                                title={`${d.generated} generated`}
+                              />
+                              <span
+                                className="bg-green-300 transition-all duration-500"
+                                style={{ width: `${(d.published / max) * 100}%` }}
+                                title={`${d.published} published`}
+                              />
+                            </span>
+                            <span className="w-11 shrink-0 text-right font-mono text-[11px] text-muted-fg">
+                              {d.published}/{d.generated}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <p className="mt-3 border-t pt-3 text-[11px] text-muted-fg">
+                      <span className="mr-1 inline-block h-2 w-2 rounded-sm bg-mint-300" />
+                      Generated
+                      <span className="mr-1 ml-3 inline-block h-2 w-2 rounded-sm bg-green-300" />
+                      Published
+                    </p>
+                  </>
+                ))}
+            </div>
+
+            <Link
+              to="/analytics"
+              className="block border-t px-4 py-2.5 text-xs font-medium text-green-500 transition-colors hover:bg-mint-50 dark:text-mint-200 dark:hover:bg-olive-500"
+            >
+              Full analytics →
+            </Link>
           </div>
+
+          {/* Learning signal chart */}
+          {stats.length > 0 && (
+            <div className="rounded-xl border bg-surface p-4">
+              <h2 className="mb-3 font-display text-sm font-semibold">Learning signal</h2>
+              <StatsChart stats={stats} dark={dark} />
+            </div>
+          )}
         </aside>
       </div>
+      <CreateAdModal
+        isOpen={isAdModalOpen}
+        onClose={() => setIsAdModalOpen(false)}
+        defaultAppId={app.id}
+      />
+      <CreatePostModal
+        isOpen={isCreatePostModalOpen}
+        onClose={() => setIsCreatePostModalOpen(false)}
+        appId={app.id}
+        appName={app.name}
+      />
+      <PaymentSandboxModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        currentPlan={sandboxPlan}
+        onPlanChanged={(newPlan) => setSandboxPlan(newPlan)}
+      />
     </AppShell>
   );
 }
