@@ -7,8 +7,13 @@ import "./styles.css";
 const router = getRouter();
 
 const rootElement = document.getElementById("root");
-if (rootElement && !rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
+if (rootElement) {
+  // Always mount React router to rootElement
+  let root = (rootElement as any)._reactRoot;
+  if (!root) {
+    root = ReactDOM.createRoot(rootElement);
+    (rootElement as any)._reactRoot = root;
+  }
   root.render(
     <React.StrictMode>
       <RouterProvider router={router} />
