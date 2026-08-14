@@ -1,277 +1,360 @@
-# AutoPromo SDK
+# ⚡ AutoPromo SDK
 
-**HackOnVibe 2026 · August 14–16**
+<div align="center">
 
-AutoPromo is a drop-in SDK that turns real product moments into platform-tailored promotional content, ranks the options using a strategy engine, and opens native compose screens so a human can publish in one tap.
+![AutoPromo Banner](https://img.shields.io/badge/AutoPromo-SDK_v0.4.1-10B981?style=for-the-badge&logo=rocket&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google_Gemini-Imagen_3-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 
-No automatic posting. No paid APIs. No ToS risk.
+**The AI-Driven Promotion Layer for Mobile & Web Applications**  
+*Turn real product moments into high-converting social copy, rank variants with an adaptive strategy engine, and publish in 1-tap with Zero ToS Risk.*
 
----
+[Explore Features](#-key-features) • [System Architecture](#-system-architecture) • [SDK Integration](#-3-line-sdk-integration) • [Local Setup](#-local-development) • [API Reference](#-environment--configuration)
 
-## Live demo
-
-| Page | URL |
-|---|---|
-| Landing | `/` |
-| All apps | `/apps` |
-| App dashboard | `/apps/demo-app` |
-| Event drill-down | `/apps/demo-app/events/:eventId` |
-| Analytics | `/analytics` |
-| Live feed | `/live/demo-app` |
-| SDK docs | `/docs` |
-| Settings & API keys | `/settings` |
-| OG share page | `/share/f1` |
+</div>
 
 ---
 
-## How it works
+## 📸 Overview & Live Pages
 
+AutoPromo is a drop-in developer SDK and intelligent analytics dashboard that automatically transforms internal product milestones (app launches, version releases, 5★ user reviews, download goals) into platform-optimized promotional posts and ad artwork.
+
+### Why AutoPromo?
+* 🛡️ **Zero ToS Risk**: No fragile browser automation or risky unofficial APIs. AutoPromo generates pre-filled native platform intent compose URLs (`twitter.com/intent/tweet`, `wa.me`, `linkedin.com/sharing`). A human always makes the final 1-tap approval.
+* 🧠 **Multi-LLM Provider Engine**: Built-in resilient fallback pipeline favoring **OpenAI `gpt-4o-mini`**, **AgentRouter**, and **Groq `Llama-3.3-70B`**.
+* 🎨 **Ad & Poster Studio**: Integrates **Google Gemini Imagen 3** for AI background artwork and visual poster rendering across 1:1 Square, 16:9 Landscape, and 9:16 Story formats.
+* 📊 **Adaptive Strategy Engine**: Scores post variants continuously based on historical user publishing choices ($\text{Score} = \text{Base Weight} + 0.5 \times \frac{\text{Chosen}}{\text{Shown}}$).
+
+### Live Demo Navigation
+
+| Page / Feature | Route Path | Description |
+|---|---|---|
+| **Landing & Pricing** | `/` | Showcase, feature matrix, and sandbox subscription plans |
+| **All Apps Directory** | `/apps` | Multi-app overview and one-click app connection |
+| **App Studio & Feed** | `/apps/:appId` | Live event triggers, ranked posts grid, and ad studio |
+| **Ad & Poster Studio** | `/apps/:appId/ads` | AI image generator & custom poster builder |
+| **Event Variant Detail** | `/apps/:appId/events/:eventId` | Complete breakdown of every variant generated for an event |
+| **Strategy Analytics** | `/analytics` | Platform/Tone performance metrics and ranking breakdown |
+| **Live Terminal Feed** | `/live/:appId` | Dark-mode terminal view for live event streaming |
+| **SDK Documentation** | `/docs` | Interactive SDK test playground and downloadable `sdk.ts` |
+| **Settings & Billing** | `/settings` | App API keys, plan subscription management, and billing receipts |
+| **OG Share Cards** | `/share/:eventId` | OpenGraph preview cards for social link sharing |
+
+---
+
+## 🏗️ System Architecture
+
+AutoPromo operates across four decoupled layers: the host application (Mobile/Web), the client SDK, the resilient Express API backend, and the TanStack Start React dashboard.
+
+### 1. High-Level Architecture Flow
+
+```mermaid
+flowchart TD
+    subgraph HostApp ["📱 Host Application (iOS / Android / Web)"]
+        SDK["@autopromo/sdk"]
+        Trigger["AutoPromo.track('milestone', { count: 1000 })"]
+    end
+
+    subgraph Backend ["⚡ AutoPromo Express API (Port 3001)"]
+        API["POST /api/event"]
+        Router["Multi-LLM Provider Router"]
+        
+        subgraph AI_Providers ["🧠 LLM Engine"]
+            OpenAI["1. OpenAI (gpt-4o-mini)"]
+            AgentRouter["2. AgentRouter"]
+            Groq["3. Groq (Llama-3.3-70B)"]
+            Fallback["4. Built-in Structured Copy Generator"]
+        end
+
+        subgraph Image_Engine ["🎨 Ad Poster Engine"]
+            Gemini["Google Gemini (Imagen 3)"]
+            Canvas["Styled SVG Canvas Layouts"]
+        end
+
+        Strategy["Adaptive Strategy Scoring Engine"]
+    end
+
+    subgraph Storage ["💾 Data & Messaging"]
+        SupaDB[("Supabase Postgres + Realtime")]
+        MemStore[("In-Memory Post Cache")]
+        Discord["Discord Webhook Alert"]
+    end
+
+    subgraph Dashboard ["📊 AutoPromo Dashboard (Port 8080)"]
+        UI["TanStack React Dashboard"]
+        QueryCache["TanStack Query Cache"]
+        Intent["1-Tap Native Intent Composers"]
+    end
+
+    Trigger --> SDK
+    SDK -->|HTTPS POST| API
+    API --> Router
+    Router --> OpenAI
+    OpenAI -- Fallback if fail --> AgentRouter
+    AgentRouter -- Fallback if fail --> Groq
+    Groq -- Fallback if fail --> Fallback
+    
+    Router --> Strategy
+    Strategy --> SupaDB
+    Strategy --> MemStore
+    API --> Discord
+
+    UI -->|Realtime Query / Sync| QueryCache
+    QueryCache <--> MemStore
+    QueryCache <--> SupaDB
+    UI --> Intent
 ```
-Mobile app  →  AutoPromo.track("milestone", { value: "1000_downloads" })
-                      ↓
-              Backend API  →  Groq LLM (one structured JSON call)
-                      ↓
-          8 variants per event (4 platforms × 2 tones)
-                      ↓
-          Strategy Engine ranks by base_weight + 0.5 × (chosen/shown)
-                      ↓
-         Dashboard shows ranked cards  →  human clicks "Tweet it"
-                      ↓
-          twitter.com/intent/tweet opens pre-filled  →  human sends
+
+---
+
+### 2. Multi-LLM Provider Fallback Pipeline
+
+AutoPromo guarantees 100% uptime for post generation by implementing a sequential fallback cascade across LLM providers:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Developer
+    participant SDK as AutoPromo SDK
+    participant Server as Express Server
+    participant OpenAI as OpenAI API
+    participant AgentRouter as AgentRouter API
+    participant Groq as Groq API
+    participant Strategy as Strategy Engine
+    participant UI as Dashboard
+
+    Developer->>SDK: AutoPromo.trackVersion({ version: "2.0" })
+    SDK->>Server: POST /api/event
+    Server->>OpenAI: Request JSON Chat Completion (gpt-4o-mini)
+    
+    alt OpenAI Success (200 OK)
+        OpenAI-->>Server: Return Structured JSON Posts
+    else OpenAI Error / 401 / Timeout
+        Server->>AgentRouter: Request JSON Chat Completion
+        alt AgentRouter Success
+            AgentRouter-->>Server: Return Structured JSON Posts
+        else AgentRouter Error
+            Server->>Groq: Request JSON Chat Completion (Llama-3.3-70B)
+            alt Groq Success
+                Groq-->>Server: Return Structured JSON Posts
+            else All APIs Unavailable
+                Server-->>Server: Use Local Template Generator
+            end
+        end
+    end
+
+    Server->>Strategy: Calculate Rank Scores
+    Server->>Server: Store in Memory & Supabase
+    Server-->>SDK: Return { ok: true, posts: [...] }
+    Server-->>UI: Instant QueryCache Sync
 ```
 
 ---
 
-## SDK integration (3 lines)
+### 3. Strategy Engine Formula
 
+Every generated post variant receives a dynamic ranking score computed by the Strategy Engine:
+
+$$\text{Score} = \text{BaseWeight}(\text{Event}, \text{Platform}) + 0.5 \times \left( \frac{\text{Times Chosen}}{\text{Times Shown} + 1} \right)$$
+
+```mermaid
+gantt
+    title Strategy Engine Score Weights Distribution
+    dateFormat X
+    axisFormat %s
+    
+    section Starting Base Weight
+    Twitter Base        :0, 90
+    LinkedIn Base       :0, 85
+    Reddit Base         :0, 80
+    WhatsApp Base       :0, 75
+    
+    section Human Engagement Boost
+    User Clicks "Publish":90, 140
+```
+
+---
+
+## ✨ Key Features
+
+### 🚀 1. 3-Line SDK Integration
+Drop `@autopromo/sdk` into any React, React Native, Expo, Node.js, or HTML web app. SDK calls are asynchronous and fail-safe—they will never block or crash the host application.
+
+### 🤖 2. Multi-LLM Copy Generation
+Generates platform-tailored promotional copy for **Twitter/X**, **LinkedIn**, **Reddit**, **WhatsApp**, **Telegram**, and **Facebook** in two tones (**Casual & Viral** vs **Professional & Clear**).
+
+### 🖼️ 3. AI Ad & Poster Studio
+Uses **Google Gemini Imagen 3** to render high-resolution promotional artwork. Customize text briefs, badge accents, vibe palettes, and export in **Square (1:1)**, **Landscape (16:9)**, or **Story (9:16)** formats.
+
+### 🛡️ 4. 1-Tap Human-in-the-Loop Compose Intents
+Generates native platform deep links so developers can review, edit, and publish with a single click:
+* **Twitter/X**: `twitter.com/intent/tweet?text=...`
+* **LinkedIn**: `linkedin.com/sharing/share-offsite/?url=...`
+* **Reddit**: `reddit.com/submit?title=...&text=...`
+* **WhatsApp**: `wa.me/?text=...`
+* **Telegram**: `t.me/share/url?url=...&text=...`
+* **Facebook**: `facebook.com/sharer/sharer.php?u=...`
+
+### 📢 5. Discord Webhook Broadcaster
+Optionally broadcasts every new event and AI-generated social thread to your team's Discord channel instantly.
+
+---
+
+## 📦 3-Line SDK Integration
+
+### 1. Installation
+```bash
+npm install @autopromo/sdk
+```
+
+### 2. Initialize
 ```typescript
-import AutoPromo from "@autopromo/sdk";
+import { AutoPromo } from "@autopromo/sdk";
 
 AutoPromo.init({
-  appId: process.env.AUTOPROMO_APP_ID,
-  apiUrl: "https://autopromo.vercel.app/api",
-  appUrl: "https://yourapp.com",
+  appId: "ap_live_2b81ef40c7aa", // From AutoPromo Dashboard -> Settings
+  apiUrl: "http://localhost:3001", // Or your production backend URL
+  appUrl: "https://focustimer.app",
+});
+```
+
+### 3. Track Product Moments
+```typescript
+// 🚀 Major Product Release
+await AutoPromo.trackVersion({
+  build: "v2.0.0",
+  notes: "Added Dark Mode and 50% faster export speeds!",
 });
 
-// Track product moments
-AutoPromo.trackLaunch({ stores: ["ios", "android"] });
-AutoPromo.trackMilestone({ label: "1000 downloads", count: 1000 });
-AutoPromo.trackVersion({ build: "2.0.0", notes: "Added dark mode" });
-AutoPromo.trackReview({ rating: 5, text: review.body });
+// ⚡ Milestone Reached
+await AutoPromo.trackMilestone({
+  label: "10,000 Active Users",
+  count: 10000,
+});
 
-// Open a platform compose screen (a human always presses send)
-const posts = await AutoPromo.getRankedPosts();
-await AutoPromo.share(posts[0]);
+// ⭐ 5-Star Review Highlight
+await AutoPromo.trackReview({
+  rating: 5,
+  author: "Sarah M.",
+  text: "The best productivity app I've used this year!",
+});
+
+// 🎯 Fetch & Publish Top Ranked Post
+const { posts } = await AutoPromo.trackEvent("launch");
+if (posts && posts.length > 0) {
+  await AutoPromo.openShareSheet(posts[0].content);
+}
 ```
 
 ---
 
-## Platforms supported
+## 🛠️ Supported Platforms & Intent Mapping
 
-| Platform | Method |
-|---|---|
-| Twitter / X | `twitter.com/intent/tweet` — native compose |
-| Reddit | `reddit.com/submit` — text or link post |
-| WhatsApp | `wa.me/?text=` — share sheet |
-| Telegram | `t.me/share/url` — share sheet |
-| LinkedIn | `linkedin.com/sharing/share-offsite` + OG share page |
-| Facebook | `facebook.com/sharer` + OG share page |
-
----
-
-## Strategy Engine
-
-```
-score = base_weight(event_type, platform)
-      + 0.5 × (times_chosen / times_shown)
-```
-
-Base weights are hard-coded starting priors. Over time the engine adjusts platform/tone order based on what your team actually publishes. Every post card shows its score in the corner — hover it to see the formula breakdown.
+| Platform | Composition Strategy | Primary Intent Target |
+|---|---|---|
+| **Twitter / X** | Web Intent Deep Link | `https://twitter.com/intent/tweet?text={content}` |
+| **LinkedIn** | OG Share Card Integration | `https://www.linkedin.com/sharing/share-offsite/?url={sharePage}` |
+| **Reddit** | Text / Link Submission | `https://www.reddit.com/submit?title={title}&text={body}` |
+| **WhatsApp** | Native Share Sheet / Deep Link | `https://wa.me/?text={content}` |
+| **Telegram** | Instant Share URL | `https://t.me/share/url?url={link}&text={content}` |
+| **Facebook** | Sharer Dialog + OG Meta | `https://www.facebook.com/sharer/sharer.php?u={sharePage}` |
 
 ---
 
-## Tech stack (100% free tier)
+## ⚙️ Environment & Configuration
 
-| Layer | Tool |
-|---|---|
-| Frontend | TanStack Start (React), TypeScript, Tailwind CSS v4 |
-| Database | Supabase (Postgres + Realtime) |
-| AI generation | Groq API — Llama 3.3 70B |
-| Backend | Vercel Serverless Functions |
-| Mobile demo | Expo / React Native |
-| Discord | Webhook auto-post on every event (no human click needed) |
+All sensitive secrets live exclusively in `server/.env` and are **never** exposed to the frontend bundle.
+
+### `server/.env` Setup
+
+```bash
+cd server
+cp .env.example .env
+```
+
+| Variable | Required | Description | Example / Source |
+|---|---|---|---|
+| `OPENAI_API_KEY` | Optional | Primary OpenAI API Key for GPT-4o-mini | `sk-proj-...` ([platform.openai.com](https://platform.openai.com)) |
+| `AGENTROUTER_API_KEY` | Optional | Secondary LLM provider key | `sk-QI5...` ([agentrouter.org](https://agentrouter.org)) |
+| `GROQ_API_KEY` | Optional | Groq Llama-3.3-70B API key | `gsk_...` ([console.groq.com](https://console.groq.com)) |
+| `GEMINI_API_KEY` | Optional | Google Gemini key for Imagen 3 poster generation | `AIzaSy...` ([aistudio.google.com](https://aistudio.google.com)) |
+| `NEXT_PUBLIC_SUPABASE_URL` | **Required** | Supabase project URL | `https://<id>.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Required** | Supabase `service_role` secret key | `eyJhbG...` (Supabase Dashboard -> API) |
+| `DISCORD_WEBHOOK_URL` | Optional | Discord channel webhook for auto-posting | `https://discord.com/api/webhooks/...` |
+| `PORT` | Optional | Express server port (Default: `3001`) | `3001` |
+| `FRONTEND_URL` | Optional | Dashboard origin URL for CORS | `http://localhost:8080` |
 
 ---
 
-## Local development
+## 🚀 Local Development Guide
 
-The project is four pieces: a dashboard, an API server, an SDK package, and an Expo demo app.
-
-### 1. Dashboard
-
-```sh
-npm install
-npm run dev
-```
-
-Opens on [http://localhost:8080](http://localhost:8080) (or the next free port).
-
-The dashboard is **live-first**: it reads from the API server below. When that server isn't running it falls back to a bundled sample dataset and labels every affected screen "Sample data" — so a demo never shows blank pages, and sample data never masquerades as real telemetry. The header pill shows which mode you're in.
-
-Point it at a different API with `VITE_API_URL` in a root `.env`:
+The workspace is organized into four main packages:
 
 ```
-VITE_API_URL=http://localhost:3001/api
+AutoPromo-SDK/
+├── src/                    # Frontend Dashboard (TanStack Start + React 19 + Tailwind v4)
+├── server/                 # Express API Server (Node.js + Supabase + LLM Router)
+├── packages/autopromo-sdk/ # NPM Package source code (@autopromo/sdk)
+└── autopromo-demo/         # React Native / Expo mobile demonstration app
 ```
 
-### 2. API server
+### 1. Launch Express Backend Server (Port 3001)
 
-```sh
+```bash
 cd server
 npm install
-cp .env.example .env    # then fill it in
+cp .env.example .env
 npm run dev
 ```
 
-Runs on `http://localhost:3001`. Requires Supabase + Groq credentials — see [server/README.md](server/README.md). Run [server/supabase-schema.sql](server/supabase-schema.sql) in the Supabase SQL editor first.
+Verify backend health at: `http://localhost:3001/health`
 
-### 3. SDK package
+### 2. Launch Dashboard Frontend (Port 8080)
 
-```sh
-cd packages/autopromo-sdk
-npm install && npm run build
+In a new terminal window:
+
+```bash
+npm install
+npm run dev
 ```
 
-See [packages/autopromo-sdk/README.md](packages/autopromo-sdk/README.md) for the full API.
+Open dashboard at: `http://localhost:8080`
 
-### 4. Expo demo app
+### 3. Build SDK Package
 
-```sh
+```bash
+cd packages/autopromo-sdk
+npm install
+npm run build
+```
+
+### 4. Run Mobile Demo (Expo)
+
+```bash
 cd autopromo-demo
 npm install
 npx expo start
 ```
 
-Scan the QR with Expo Go on a real phone. Set `EXPO_PUBLIC_AUTOPROMO_API_URL` to your machine's **LAN IP**, not `localhost` — on a phone `localhost` is the phone. See [autopromo-demo/README.md](autopromo-demo/README.md).
+---
 
-## Environment variables & where API keys go
+## 💳 Business Model & Pricing Tiers
 
-**Short answer: secrets go in `server/.env`. Never in the browser, never in localStorage.**
-
-Anything the frontend can read, a visitor can read. Vite compiles every `VITE_`-prefixed variable directly into the JavaScript bundle, so it is public by definition — the same is true of `EXPO_PUBLIC_` in the demo app. Secrets therefore live only on the server, which is the sole component that talks to Supabase and Groq.
-
-### `server/.env` — secret (start from `server/.env.example`)
-
-| Variable | Required | Where to get it |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase → Settings → API → Project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase → Settings → API → `service_role`. **Bypasses row-level security** |
-| `GROQ_API_KEY` | ✅ | [console.groq.com](https://console.groq.com) → API Keys. Billable |
-| `DISCORD_WEBHOOK_URL` | — | Discord → channel → Integrations → Webhooks. Blank disables Discord posts |
-| `PORT` | — | Defaults to `3001` |
-| `FRONTEND_URL` | — | Dashboard origin, for CORS. Defaults to `http://localhost:8080` |
-| `ALLOWED_ORIGINS` | — | Extra CORS origins, comma-separated. Add your deployed dashboard URL |
-
-```sh
-cd server
-cp .env.example .env    # then fill it in
-npm run dev
-```
-
-The server **validates all of this at boot**. A missing, placeholder, or malformed value stops startup with a message naming the variable and where to get it, instead of failing later as a confusing 500:
-
-```
-❌ AutoPromo server can't start — 1 environment problem:
-
-  GROQ_API_KEY — Groq keys start with 'gsk_'
-      get it from: console.groq.com → API Keys
-```
-
-On a successful boot it prints a masked summary — secret values are never logged in full.
-
-### Root `.env` — public (start from `.env.example`)
-
-| Variable | Purpose |
-|---|---|
-| `VITE_API_URL` | Base URL of the API server. Defaults to `http://localhost:3001/api` |
-
-Only put non-secret values here.
-
-### `autopromo-demo` — public
-
-Set `EXPO_PUBLIC_AUTOPROMO_APP_ID`, `EXPO_PUBLIC_AUTOPROMO_API_URL`, and `EXPO_PUBLIC_AUTOPROMO_APP_URL`. The app ID is an identifier, not a secret — it only lets a client submit events for that app.
-
-### What about the `ap_live_…` keys in the dashboard?
-
-Those are per-app **identifiers** shown on the Settings page for copy-paste into `AutoPromo.init()`. They are not credentials for Groq or Supabase, and nothing in the browser ever holds a real secret.
-
-> `.env` and `.env.*` are gitignored; only `.env.example` files are committed. Set the same variables in your host's dashboard (Vercel → Settings → Environment Variables) when deploying.
+| Feature | Free Sandbox | Builder Pro ($12/mo) | Agency ($39/mo) |
+|---|---|---|---|
+| **Monthly AI Posts** | 20 posts | 200 posts | **Unlimited** |
+| **Connected Apps** | 1 app | 3 apps | **Unlimited** |
+| **LLM Provider Engine** | Standard | Priority Queue | Priority Queue |
+| **Ad & Poster Studio** | Canvas Layouts | Gemini Imagen 3 | Gemini Imagen 3 + Custom Themes |
+| **Analytics & Export** | Dashboard | Full Insights | **White-Label PDF & CSV Export** |
 
 ---
 
-## Business model
+## 📄 License & Credits
 
-| Tier | Price | Limits |
-|---|---|---|
-| Free | $0 | 20 posts/month · 1 app |
-| Builder | $12/month | 200 posts · 3 apps · strategy insights |
-| Agency | $39/month | Unlimited posts · unlimited apps · white-label |
-
----
-
-## Project structure
-
-```
-packages/autopromo-sdk/    # The npm package host apps install
-  src/
-    index.ts               # init / track* / getRankedPosts / share
-    share.ts               # Compose-intent URL builders (all 6 platforms)
-    http.ts                # Fetch wrapper — never throws into the host app
-    types.ts
-
-autopromo-demo/            # Expo app — the on-stage demo
-  App.tsx                  # Fires all 4 event types, renders ranked results
-  components/              # EventButton, PostCard, StatusBanner
-  config.ts                # APP_ID / API_URL / APP_URL
-
-server/                    # Express API (see server/README.md)
-  src/
-    routes/                # /api/apps, /event, /posts, /mark-chosen
-    strategy.ts            # Strategy Engine scoring
-    prompts.ts             # Groq prompt builder
-    discord.ts             # Webhook auto-post
-  supabase-schema.sql
-
-src/                       # Dashboard (TanStack Start)
-  routes/
-    index.tsx              # Landing page + pricing
-    apps.index.tsx         # App list + connect a new app
-    apps.$appId.tsx        # Per-app dashboard — fire events, publish posts
-    apps.$appId.events.$eventId.tsx  # Every variant from one event
-    analytics.index.tsx    # Cross-app strategy-engine analytics
-    settings.index.tsx     # API keys, connection status, env reference
-    live.$appId.tsx        # Public live feed (dark terminal view)
-    docs.index.tsx         # SDK integration guide
-    share.$eventId.tsx     # OG share page for LinkedIn/Facebook
-  components/
-    AppShell.tsx           # Sidebar nav + header
-    PostCard.tsx           # Post with share, copy, score breakdown
-    ScoreBreakdown.tsx     # Explains how one post's rank was computed
-    StatsChart.tsx         # Shown-vs-published learning signal
-    EventTimeline.tsx      # Event → variants → published history
-    ConnectionBadge.tsx    # Live / sample-data indicator
-    EmptyState.tsx, PostCardSkeleton.tsx, PlatformIcon.tsx, ThemeToggle.tsx
-  lib/
-    api.ts                 # Typed backend client
-    apiTypes.ts            # Wire row shapes
-    adapters.ts            # Wire ↔ display translation
-    queries.ts             # React Query hooks (live + fallback)
-    dataSource.tsx         # Connection state provider
-    share.ts               # Dashboard-side share URL builders
-    mockData.ts            # Sample dataset used when the API is unreachable
-```
-
----
-
-Built for [HackOnVibe](https://hackonvibe.com) by the AutoPromo team.
-This project was also scaffolded with [Lovable](https://lovable.dev/projects/f0a7b634-fb29-440b-bf30-a3d816b99306).
+* **Event / Hackathon**: HackOnVibe 2026
+* **Team**: AutoPromo Core Team
+* **Framework**: Built with TanStack Start, React 19, Express, Tailwind CSS, Supabase, OpenAI, and Google Gemini.
