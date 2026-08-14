@@ -135,8 +135,8 @@ export function CreateAdModal({ isOpen, onClose, defaultAppId }: CreateAdModalPr
         };
       }
 
-      // 2. If Gemini API Key is provided, perform Gemini AI artwork generation
-      const activeApiKey = geminiApiKey.trim();
+      // 2. Perform artwork generation brief processing
+      const activeApiKey = "";
       if (activeApiKey) {
         toast.info("Generating AI artwork via Google Gemini...", { id: "gemini-toast" });
         try {
