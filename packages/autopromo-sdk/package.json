@@ -1,0 +1,40 @@
+{
+  "name": "@autopromo/sdk",
+  "version": "0.4.1",
+  "description": "Drop-in promotion layer for newly launched mobile apps. Turns product events into ranked, platform-tailored posts and opens the native compose screen.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "marketing",
+    "promotion",
+    "sdk",
+    "react-native",
+    "expo",
+    "growth",
+    "social-share"
+  ],
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
