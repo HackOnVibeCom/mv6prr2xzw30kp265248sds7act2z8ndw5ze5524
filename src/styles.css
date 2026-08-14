@@ -1,0 +1,241 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * AutoPromo SDK design system.
+ * Four ramps only: mint, green, olive, amber (amber used sparingly).
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /*
+   * Mint ramp. The low steps double as light-mode surfaces (bg-mint-50/100),
+   * so they're kept close to neutral — a heavy tint across whole panels is
+   * what made the UI look washed. The 300–600 steps stay saturated because
+   * they're only ever used for accents, icons and chart marks.
+   */
+  --color-mint-50: #f2f6f4;
+  --color-mint-100: #e6efeb;
+  --color-mint-200: #d2e4db;
+  --color-mint-300: #9bdcbb;
+  --color-mint-400: #6fc79c;
+  --color-mint-500: #48a97d;
+  --color-mint-600: #2e7d5e;
+
+  --color-green-50: #eaf6ee;
+  --color-green-100: #c2e8ce;
+  --color-green-200: #8fd1a6;
+  --color-green-300: #4fae72;
+  --color-green-400: #278a52;
+  --color-green-500: #186b3e;
+  --color-green-600: #0f4c2c;
+
+  /*
+   * Neutral ramp.
+   *
+   * Kept under the `olive-` name because components across the app reference
+   * these steps, but re-tuned from a brown/olive cast to a near-neutral slate
+   * with only a trace of green. Brown-grey surfaces read muddy and dated in
+   * dark mode; a neutral ramp lets the green brand hue be the only real colour
+   * on screen, which is what makes a dark UI look intentional.
+   */
+  --color-olive-50: #f6f8f7;
+  --color-olive-100: #e3e8e6;
+  --color-olive-200: #9aa4a1;
+  --color-olive-300: #6b7672;
+  --color-olive-400: #2f3835;
+  --color-olive-500: #1e2624;
+  --color-olive-600: #121716;
+
+  --color-amber-50: #fdf0dd;
+  --color-amber-100: #f6ce8e;
+  --color-amber-200: #e8a13b;
+  --color-amber-300: #b9711a;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-border: var(--surface-border);
+  --color-muted-fg: var(--muted-fg);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-ring: var(--ring);
+
+  /*
+   * shadcn/ui compatibility tokens.
+   *
+   * The components under components/ui/ ship with shadcn's vocabulary
+   * (bg-popover, text-muted-foreground, …). Without these definitions those
+   * utilities resolve to nothing — which rendered popovers and dropdowns with
+   * transparent backgrounds. Each one maps onto the AutoPromo ramps above so
+   * shadcn components inherit this design system rather than a second one.
+   */
+  --color-card: var(--surface);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-fg);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-secondary: var(--muted);
+  --color-secondary-foreground: var(--foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--surface-border);
+  --color-border: var(--surface-border);
+}
+
+:root {
+  --radius: 0.625rem;
+  /* Barely-tinted neutrals: the green reads as brand accent, not as a wash
+     over the whole page. Borders are grey rather than mint so cards have a
+     crisp edge instead of a coloured halo. */
+  --background: #f7f9f8;
+  --foreground: #131817;
+  --surface: #ffffff;
+  --surface-border: #e2e8e6;
+  --muted-fg: #5a6664;
+  --primary: #186b3e;
+  --primary-hover: #0f4c2c;
+  --primary-foreground: #ffffff;
+  --ring: #278a52;
+
+  /* Floating layers (popover, dropdown, tooltip) must be fully opaque —
+     a translucent value lets page content show through the panel. */
+  --popover: #ffffff;
+  --muted: #f0f3f2;
+  --accent: #e8f3ed;
+  --accent-foreground: #186b3e;
+  --destructive: #b9711a;
+  --destructive-foreground: #fdf0dd;
+}
+
+.dark {
+  /*
+   * Dark theme.
+   *
+   * Surfaces step up in lightness as they come forward — page, then card,
+   * then popover — which is what creates depth without heavy shadows. Text is
+   * near-white rather than mint-tinted: coloured body copy is the main thing
+   * that made the previous dark theme look amateurish.
+   */
+  --background: #0f1413;
+  --foreground: #eef2f1;
+  --surface: #171e1c;
+  --surface-border: #2a3532;
+  --muted-fg: #9aa8a4;
+  --primary: #4fae72;
+  --primary-hover: #5fc084;
+  --primary-foreground: #08120d;
+  --ring: #6fc79c;
+
+  /* One step above --surface, so a floating panel reads as being above the
+     card it was opened from. */
+  --popover: #212a28;
+  --muted: #212a28;
+  --accent: #212a28;
+  --accent-foreground: #eef2f1;
+  --destructive: #e8a13b;
+  --destructive-foreground: #0f1413;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-surface-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes ap-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ap-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0.35;
+  }
+}
+
+@keyframes ap-flash {
+  from {
+    background-color: rgba(232, 161, 59, 0.22);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@utility ap-enter {
+  animation: ap-enter 200ms ease-out both;
+}
+
+@utility ap-pulse-dot {
+  animation: ap-pulse 1.6s ease-in-out infinite;
+}
+
+@utility ap-flash {
+  animation: ap-flash 1200ms ease-out both;
+}
+
+@utility ap-press {
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease;
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
