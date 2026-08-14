@@ -40,10 +40,10 @@ AutoPromo is a drop-in developer SDK and analytics dashboard that captures key a
 
 ```mermaid
 flowchart LR
-    App["Host Application<br/>(iOS / Android / Web)"] -->|@autopromo/sdk| API["Express API Backend<br/>(Port 3001)"]
-    API -->|Priority Route| LLM["Multi-LLM Engine<br/>OpenAI / AgentRouter / Groq"]
-    API -->|Score & Persist| Strategy["Strategy Engine & Supabase DB"]
-    API -->|1-Tap Intents| Intent["Native Social Composers<br/>Twitter / LinkedIn / Reddit / WhatsApp"]
+    App["Host Application (iOS, Android, Web)"] -->|"@autopromo/sdk"| API["Express API Backend (Port 3001)"]
+    API -->|"Priority Route"| LLM["Multi-LLM Engine (OpenAI, AgentRouter, Groq)"]
+    API -->|"Score and Persist"| Strategy["Strategy Engine and Supabase DB"]
+    API -->|"1-Tap Intents"| Intent["Native Social Composers (Twitter, LinkedIn, Reddit)"]
 ```
 
 ---
@@ -77,11 +77,11 @@ sequenceDiagram
     participant LLM as Multi-LLM Cascade
     participant Cache as Memory / DB Store
 
-    App->>Server: POST /api/event { type: "launch" }
+    App->>Server: POST /api/event
     Server->>LLM: 1. Try OpenAI (gpt-4o-mini)
     alt OpenAI Successful
         LLM-->>Server: Return Generated Copy
-    else OpenAI Error / 401
+    else OpenAI Error
         Server->>LLM: 2. Try AgentRouter API
         alt AgentRouter Successful
             LLM-->>Server: Return Generated Copy
@@ -94,8 +94,8 @@ sequenceDiagram
             end
         end
     end
-    Server->>Cache: Save & Score Variants
-    Server-->>App: HTTP 200 OK { ok: true, posts: [...] }
+    Server->>Cache: Save and Score Variants
+    Server-->>App: HTTP 200 OK
 ```
 
 ---
