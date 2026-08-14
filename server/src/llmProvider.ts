@@ -15,11 +15,10 @@ export interface LlmConfig {
 }
 
 export function getLlmConfig(): LlmConfig | null {
-  const openAiKey = process.env.OPENAI_API_KEY?.trim();
-  if (openAiKey && !openAiKey.includes("your_openai_key_here")) {
+  if (env.openAiApiKey) {
     return {
       provider: "openai",
-      apiKey: openAiKey,
+      apiKey: env.openAiApiKey,
       baseUrl: process.env.OPENAI_BASE_URL?.trim().replace(/\/$/, "") || "https://api.openai.com/v1",
       defaultModel: env.llmModel || "gpt-4o-mini",
     };

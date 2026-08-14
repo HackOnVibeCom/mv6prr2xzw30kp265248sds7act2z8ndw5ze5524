@@ -75,6 +75,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+// Inline script injected into <head> before any CSS or JS loads.
+// Reads the persisted theme from localStorage and applies .dark to <html>
+// immediately, preventing a flash of light theme for users who prefer dark.
+const themeInitScript = `(function(){try{var t=localStorage.getItem('ap-theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark');document.body.classList.add('dark');}}catch(e){}})();`;
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -103,6 +108,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
     ],
+    scripts: [
+      {
+        children: themeInitScript,
+      },
+    ],
   }),
 
   shellComponent: RootShell,
@@ -111,17 +121,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
-// Inline script injected before any CSS or JS loads.
-// Reads the persisted theme from localStorage and applies .dark to <html>
-// immediately, preventing a flash of light theme for users who prefer dark.
-const themeInitScript = `(function(){try{var t=localStorage.getItem('ap-theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark');document.body.classList.add('dark');}}catch(e){}})();`;
-
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <>
       <HeadContent />
-      {/* Applies saved theme before React loads — prevents flash of wrong theme */}
-      <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       {children}
       <Toaster position="bottom-right" />
       <Scripts />

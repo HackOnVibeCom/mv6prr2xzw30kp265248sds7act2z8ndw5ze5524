@@ -46,6 +46,12 @@ const SPECS: VarSpec[] = [
     validate: (v) => (v.length > 40 ? null : "looks too short to be a service-role key"),
   },
   {
+    name: "OPENAI_API_KEY",
+    required: false,
+    where: "platform.openai.com → API Keys",
+    validate: (v) => (v.startsWith("sk-") ? null : "OpenAI keys start with 'sk-'"),
+  },
+  {
     name: "GROQ_API_KEY",
     required: false,
     where: "console.groq.com → API Keys",
@@ -75,6 +81,7 @@ const IMAGE_PROVIDERS: ImageProviderName[] = ["openai", "gemini", "stability", "
 export interface Env {
   supabaseUrl: string;
   supabaseServiceRoleKey: string;
+  openAiApiKey: string | null;
   groqApiKey: string | null;
   agentRouterApiKey: string | null;
   agentRouterBaseUrl: string;
@@ -132,12 +139,13 @@ export function loadEnv(): Env {
     }
   }
 
+  const openAiApiKey = read("OPENAI_API_KEY");
   const groqApiKey = read("GROQ_API_KEY");
   const agentRouterApiKey = read("AGENTROUTER_API_KEY");
 
-  if (!groqApiKey && !agentRouterApiKey && !read("OPENAI_API_KEY")) {
+  if (!openAiApiKey && !groqApiKey && !agentRouterApiKey) {
     warnings.push(
-      "Neither AGENTROUTER_API_KEY nor GROQ_API_KEY is set in server/.env — text post generation will use rich fallback copy generation.",
+      "Neither OPENAI_API_KEY, AGENTROUTER_API_KEY nor GROQ_API_KEY is set in server/.env — text post generation will use rich fallback copy generation.",
     );
   }
 
@@ -190,6 +198,7 @@ export function loadEnv(): Env {
   return {
     supabaseUrl: read("NEXT_PUBLIC_SUPABASE_URL")!,
     supabaseServiceRoleKey: read("SUPABASE_SERVICE_ROLE_KEY")!,
+    openAiApiKey,
     groqApiKey,
     agentRouterApiKey,
     agentRouterBaseUrl: read("AGENTROUTER_BASE_URL") || "https://agentrouter.org/v1",
@@ -214,12 +223,19 @@ export const env: Env = loadEnv();
 /** Safe-to-log summary. Never prints secret values. */
 export function describeEnv(e: Env): string {
   const mask = (v: string | null) => (v ? `${v.slice(0, 6)}${"•".repeat(6)} (${v.length} chars)` : "not set");
-  const llmProvider = e.agentRouterApiKey ? `AgentRouter (${e.llmModel || "default model"})` : e.groqApiKey ? `Groq (${e.llmModel || "llama-3.3-70b-versatile"})` : "fallback copy generator";
+  const llmProvider = e.openAiApiKey
+    ? `OpenAI (${e.llmModel || "gpt-4o-mini"})`
+    : e.agentRouterApiKey
+    ? `AgentRouter (${e.llmModel || "default model"})`
+    : e.groqApiKey
+    ? `Groq (${e.llmModel || "llama-3.3-70b-versatile"})`
+    : "fallback copy generator";
 
   return [
     `  Supabase URL:  ${e.supabaseUrl}`,
     `  Service key:   ${mask(e.supabaseServiceRoleKey)}`,
     `  LLM Provider:  ${llmProvider}`,
+    `  OpenAI key:    ${mask(e.openAiApiKey)}`,
     `  AgentRouter:   ${mask(e.agentRouterApiKey)}`,
     `  Groq key:      ${mask(e.groqApiKey)}`,
     `  Discord:       ${e.discordWebhookUrl ? "configured" : "not configured (optional)"}`,
