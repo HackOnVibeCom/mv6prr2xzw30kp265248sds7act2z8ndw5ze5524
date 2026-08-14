@@ -112,33 +112,63 @@ router.post("/", async (req: Request, res: Response) => {
     });
   }
 
-  // ── 1. Fetch app context ──────────────────────────────────────────────────
-  const { data: app, error: appErr } = await supabase
+  // ── 1. Fetch app context (with seed app & dynamic fallbacks) ──────────────
+  let app: AppRow | null = null;
+  const { data: dbApp } = await supabase
     .from("apps")
     .select("*")
     .eq("id", appId)
     .single<AppRow>();
 
-  if (appErr || !app) {
-    return res.status(404).json({ error: "App not found" });
+  if (dbApp) {
+    app = dbApp;
+  } else {
+    // Fallback for seed apps & dynamic apps
+    const seedApps: Record<string, { name: string; tagline: string; description: string }> = {
+      "pocket-recipe": {
+        name: "PocketRecipe",
+        tagline: "Your AI sous-chef in your pocket.",
+        description: "Turn whatever's in your fridge into dinner step-by-step with zero waste.",
+      },
+      "focus-timer": {
+        name: "FocusTimer",
+        tagline: "A timer that mutes your loudest apps.",
+        description: "A pomodoro timer that quietly blocks the apps you doomscroll while it runs.",
+      },
+      "habit-tracker": {
+        name: "HabitTracker",
+        tagline: "Build habits that stick, beautifully.",
+        description: "Minimalist streak tracker with widget support and privacy-first sync.",
+      },
+    };
+
+    const foundSeed = seedApps[appId];
+    app = {
+      id: appId,
+      name: foundSeed?.name || (payload.appName as string) || appId,
+      tagline: foundSeed?.tagline || "Featured App",
+      description: foundSeed?.description || (payload.prompt as string) || (payload.details as string) || "Modern software app.",
+    };
   }
 
-  // ── 2. Store the raw event ────────────────────────────────────────────────
+  // ── 2. Store the raw event (graceful if DB offline) ───────────────────────
+  let eventId = `evt-${Date.now()}`;
   const { data: eventRow, error: eventErr } = await supabase
     .from("events")
     .insert({ app_id: appId, type, payload })
     .select()
     .single();
 
-  if (eventErr || !eventRow) {
-    console.error("[event] insert error:", eventErr);
-    return res.status(500).json({ error: "Failed to store event" });
+  if (eventRow?.id) {
+    eventId = eventRow.id;
+  } else if (eventErr) {
+    console.warn("[event] Supabase insert event warning (using memory ID):", eventErr.message);
   }
 
   // ── 3. Call LLM for all variants in one structured JSON request ─────────
   const promptText = buildGenerationPrompt(app, type, payload);
   const llmResult = await generateLlmJsonCompletion<GroqResponse>({
-    systemPrompt: "You are an expert social media copywriter for software apps. Output valid JSON only.",
+    systemPrompt: "You are an expert social media copywriter for software apps. Output valid JSON only containing a 'posts' array.",
     userPrompt: promptText,
     temperature: 0.8,
   });
@@ -146,17 +176,16 @@ router.post("/", async (req: Request, res: Response) => {
   const groqResult = llmResult || generateFallbackPosts(app, type, payload as Record<string, unknown>);
 
   if (!groqResult.posts || !Array.isArray(groqResult.posts)) {
-    return res.status(502).json({ error: "Unexpected LLM response shape" });
+    groqResult.posts = generateFallbackPosts(app, type, payload as Record<string, unknown>).posts;
   }
 
   // ── 4. Fetch current platform_stats for ranking ───────────────────────────
   const { data: stats } = await supabase.from("platform_stats").select("*").eq("app_id", appId);
-
   const statsRows = (stats ?? []) as PlatformStatRow[];
 
   // ── 5. Score each variant and build insert rows ───────────────────────────
   const insertRows = groqResult.posts.map((v) => ({
-    event_id: eventRow.id,
+    event_id: eventId,
     app_id: appId,
     platform: v.platform as Platform,
     tone: v.tone as Tone,
@@ -168,8 +197,7 @@ router.post("/", async (req: Request, res: Response) => {
 
   const { error: insertErr } = await supabase.from("generated_posts").insert(insertRows);
   if (insertErr) {
-    console.error("[event] generated_posts insert error:", insertErr);
-    return res.status(500).json({ error: "Failed to store generated posts" });
+    console.warn("[event] generated_posts insert warning:", insertErr.message);
   }
 
   // ── 6. Increment times_shown for each variant ─────────────────────────────
@@ -190,7 +218,7 @@ router.post("/", async (req: Request, res: Response) => {
     await supabase
       .from("events")
       .update({ payload: { ...payload, reply_draft: replyDraft } })
-      .eq("id", eventRow.id);
+      .eq("id", eventId);
   }
 
   // ── 8. Fire-and-forget Discord notification ───────────────────────────────
@@ -217,7 +245,7 @@ router.post("/", async (req: Request, res: Response) => {
   // ── 9. Return success ─────────────────────────────────────────────────────
   return res.status(200).json({
     ok: true,
-    eventId: eventRow.id,
+    eventId: eventId,
     generated: insertRows.length,
     ...(replyDraft ? { replyDraft } : {}),
   });

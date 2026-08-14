@@ -8,6 +8,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createApp, getAppById, listApps, listPosts, markChosen, trackEvent } from "@/lib/api";
+import { AutoPromo } from "@/lib/sdk";
 import { toDisplayApp, toDisplayPost, toWirePlatform, toWireTone } from "@/lib/adapters";
 import type { ApiEventType } from "@/lib/apiTypes";
 import {
@@ -163,8 +164,14 @@ export function useTrackEvent(appId: string) {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (vars: { type: ApiEventType; payload: Record<string, unknown> }) =>
-      trackEvent({ appId, type: vars.type, payload: vars.payload }),
+    mutationFn: async (vars: { type: ApiEventType; payload: Record<string, unknown> }) => {
+      try {
+        return await trackEvent({ appId, type: vars.type, payload: vars.payload });
+      } catch (err) {
+        console.warn("[useTrackEvent] API call failed, using SDK fallback copy generator:", err);
+        return await AutoPromo.trackEvent(vars.type as any, vars.payload);
+      }
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.posts(appId) });
       void qc.invalidateQueries({ queryKey: queryKeys.app(appId) });

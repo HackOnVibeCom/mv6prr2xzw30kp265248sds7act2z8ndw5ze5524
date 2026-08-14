@@ -76,6 +76,7 @@ export function CreatePostModal({ isOpen, onClose, appId, appName }: CreatePostM
       await trackEventMutation.mutateAsync({
         type: eventType,
         payload: {
+          appName,
           prompt: customPrompt.trim(),
           details: customPrompt.trim(),
           targetPlatforms: selectedPlatforms,
