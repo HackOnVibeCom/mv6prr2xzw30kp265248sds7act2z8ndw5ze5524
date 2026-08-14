@@ -323,6 +323,15 @@ export function AppShell({
               <CreditCard className="h-3.5 w-3.5" />
               <span>{PLANS[sandboxPlan].badge}</span>
             </button>
+            <button
+              type="button"
+              onClick={() => setIsAdModalOpen(true)}
+              title="Create AI Ad Poster"
+              className="ap-press inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium text-muted-fg transition-colors hover:bg-mint-100 dark:hover:bg-olive-500"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
+              <span className="hidden sm:inline">Create Ad</span>
+            </button>
             {liveAppId && (
               <Link
                 to="/live/$appId"

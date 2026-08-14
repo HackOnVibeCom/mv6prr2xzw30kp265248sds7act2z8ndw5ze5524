@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Terminal, Play, Sparkles, Copy, Check, Download, Code, CheckCircle2, Rocket, Star, RefreshCw } from "lucide-react";
+import { Terminal, Sparkles, Copy, Download, Code, CheckCircle2, Rocket, Star, RefreshCw } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { snippets } from "@/lib/mockData";
 import { AutoPromo, type EventType, type GeneratedPost } from "@/lib/sdk";
@@ -26,6 +26,26 @@ function DocsPage() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulatedPosts, setSimulatedPosts] = useState<GeneratedPost[]>([]);
   const [lastEventFired, setLastEventFired] = useState<string | null>(null);
+
+  const handleDownloadSdk = async () => {
+    try {
+      // Fetch the SDK source file content at build time via dynamic import
+      const sdkModule = await import("@/lib/sdk?raw");
+      const content: string = (sdkModule as { default: string }).default;
+      const blob = new Blob([content], { type: "text/typescript" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "sdk.ts";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("SDK downloaded as sdk.ts!");
+    } catch {
+      toast.error("Download failed — copy the file from src/lib/sdk.ts manually.");
+    }
+  };
 
   const snippet = snippets.find((s) => s.id === active) ?? snippets[0];
 
@@ -73,14 +93,14 @@ function DocsPage() {
             Install <code className="rounded bg-emerald-500/10 px-1.5 py-0.5 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-300">@autopromo/sdk</code> in your mobile or web app, emit product events, and test live in the interactive playground below.
           </p>
         </div>
-        <a
-          href="/src/lib/sdk.ts"
-          download="sdk.ts"
+        <button
+          type="button"
+          onClick={handleDownloadSdk}
           className="ap-press inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-500/20"
         >
           <Download className="h-4 w-4" />
           Download SDK Package (sdk.ts)
-        </a>
+        </button>
       </div>
 
       {/* ── Interactive SDK Test Playground ── */}

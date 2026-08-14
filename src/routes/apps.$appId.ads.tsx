@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Download, ImageIcon, Key, Eye, EyeOff, Loader2, Sparkles, Wand2, Lock, CreditCard } from "lucide-react";
+import { ArrowLeft, Download, ImageIcon, Loader2, Sparkles, Wand2, Lock, CreditCard } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { AdCanvas } from "@/components/AdCanvas";
 import { EmptyState } from "@/components/EmptyState";
@@ -46,6 +46,10 @@ function AdStudio() {
 
   const [input, setInput] = useState("");
   const [format, setFormat] = useState<AdFormatName>("square");
+  const [geminiApiKey, setGeminiApiKey] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem("autopromo-gemini-api-key") ?? "";
+  });
   const [sandboxPlan, setSandboxPlan] = useState<PlanTier>("builder");
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [result, setResult] = useState<GenerateAdResult | null>(null);
@@ -77,22 +81,27 @@ function AdStudio() {
           ok: true,
           brief: {
             headline: `${app?.name ?? "App"}: ${app?.tagline ?? "Featured App"}`,
-            subline: promptText,
+            subhead: promptText,
             badge: "FEATURED APP",
             cta: "Try Free Now",
-            imagePrompt: `A commercial promotion poster for ${app?.name ?? "App"}, ${promptText}`,
-            artStyle: "Modern tech showcase",
+            vibe: "bold",
+            rationale: "Auto-generated fallback layout.",
+            imagery: "gradient",
           },
           palette: {
-            bgDark: "#0B132B",
-            bgLight: "#1C2541",
-            accent: "#48E5C2",
-            text: "#FFFFFF",
-            subtext: "#A3CEF1",
+            art: "gradient",
+            palette: "dark",
+            ink: {
+              heading: "#FFFFFF",
+              body: "#A3CEF1",
+              accent: "#48E5C2",
+              scrim: "#0B132B",
+            },
+            type: "bold",
           },
           format: {
             name: format,
-            width: format === "landscape" ? 1200 : format === "story" ? 1080 : 1080,
+            width: format === "landscape" ? 1200 : 1080,
             height: format === "landscape" ? 630 : format === "story" ? 1920 : 1080,
           },
           image: { dataUri: null, provider: "none" },
@@ -105,7 +114,7 @@ function AdStudio() {
         try {
           const aspect = format === "landscape" ? "16:9" : format === "story" ? "9:16" : "1:1";
           const uri = await generateGeminiImageClient(
-            data.brief.imagePrompt || input || app?.description || "",
+            input || app?.description || data.brief.headline,
             key,
             aspect
           );

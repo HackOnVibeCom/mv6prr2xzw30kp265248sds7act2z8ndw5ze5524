@@ -290,7 +290,7 @@ function Landing() {
             Full integration guide →
           </Link>
           <a
-            href="https://github.com"
+            href="https://github.com/MohamedMoataz1/AutoPromo-SDK"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-muted-fg hover:underline"

@@ -7,20 +7,16 @@ import {
   Download,
   Copy,
   Check,
-  Key,
-  Eye,
-  EyeOff,
   Loader2,
   RefreshCw,
   Layout,
-  Lock,
   CreditCard,
 } from "lucide-react";
 import { useApps } from "@/lib/queries";
 import { AdCanvas } from "@/components/AdCanvas";
 import { PaymentSandboxModal } from "@/components/PaymentSandboxModal";
 import { getStoredSandboxPlan, PLANS, canUseAdStudio, type PlanTier } from "@/lib/sandboxPlan";
-import { generateAd, generateGeminiImageClient, type AdFormatName, type GenerateAdResult } from "@/lib/api";
+import { generateAd, type AdFormatName, type GenerateAdResult } from "@/lib/api";
 import type { App } from "@/lib/mockData";
 
 const GEMINI_KEY_STORAGE = "autopromo-gemini-api-key";
@@ -111,23 +107,28 @@ export function CreateAdModal({ isOpen, onClose, defaultAppId }: CreateAdModalPr
         result = {
           ok: true,
           brief: {
-            headline: `${selectedApp.name}: ${selectedApp.tagline}`,
-            subline: promptText,
+            headline: `${selectedApp.name}: ${selectedApp.tagline ?? selectedApp.name}`,
+            subhead: promptText,
             badge: "FEATURED APP",
             cta: "Try Free Now",
-            imagePrompt: `A vibrant high-end commercial promotion for ${selectedApp.name}, ${promptText}`,
-            artStyle: "3D glassmorphism tech showcase with soft neon lighting",
+            vibe: "bold",
+            rationale: "Auto-generated fallback layout.",
+            imagery: "gradient",
           },
           palette: {
-            bgDark: "#0B132B",
-            bgLight: "#1C2541",
-            accent: "#48E5C2",
-            text: "#FFFFFF",
-            subtext: "#A3CEF1",
+            art: "gradient",
+            palette: "dark",
+            ink: {
+              heading: "#FFFFFF",
+              body: "#A3CEF1",
+              accent: "#48E5C2",
+              scrim: "#0B132B",
+            },
+            type: "bold",
           },
           format: {
             name: format,
-            width: format === "landscape" ? 1200 : format === "story" ? 1080 : 1080,
+            width: format === "landscape" ? 1200 : 1080,
             height: format === "landscape" ? 630 : format === "story" ? 1920 : 1080,
           },
           image: { dataUri: null, provider: "none" },
@@ -136,28 +137,8 @@ export function CreateAdModal({ isOpen, onClose, defaultAppId }: CreateAdModalPr
       }
 
       // 2. Perform artwork generation brief processing
-      const activeApiKey = "";
-      if (activeApiKey) {
-        toast.info("Generating AI artwork via Google Gemini...", { id: "gemini-toast" });
-        try {
-          const selectedFormatOpt = FORMAT_OPTIONS.find((f) => f.name === format)!;
-          const imageUri = await generateGeminiImageClient(
-            result.brief.imagePrompt || inputPrompt || selectedApp.description,
-            activeApiKey,
-            selectedFormatOpt.aspect
-          );
-          result.image = {
-            dataUri: imageUri,
-            provider: "gemini",
-          };
-          toast.success("Gemini AI artwork generated successfully!", { id: "gemini-toast" });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : "Gemini API generation failed";
-          toast.error(`Gemini Error: ${msg}`, { id: "gemini-toast" });
-          result.image.error = msg;
-        }
-      } else if (!result.image.dataUri) {
-        toast.info("Generated ad poster layout. (Add Gemini API key above for custom AI background images)");
+      if (!result.image.dataUri) {
+        toast.info("Generated ad poster layout. Configure IMAGE_API_KEY in server/.env for AI background images.");
       }
 
       setAdResult(result);
@@ -194,7 +175,7 @@ export function CreateAdModal({ isOpen, onClose, defaultAppId }: CreateAdModalPr
 
   const handleCopyPostText = async () => {
     if (!adResult || !selectedApp) return;
-    const text = `${adResult.brief.headline}\n\n${adResult.brief.subline}\n\n👉 ${adResult.brief.cta}: ${selectedApp.url}\n\n#${selectedApp.name.replace(/\s+/g, "")} #AppStore #IndieApp`;
+    const text = `${adResult.brief.headline}\n\n${adResult.brief.subhead}\n\n👉 ${adResult.brief.cta}: ${selectedApp.url}\n\n#${selectedApp.name.replace(/\s+/g, "")} #AppStore #IndieApp`;
     try {
       await navigator.clipboard.writeText(text);
       setCopiedText(true);
@@ -356,7 +337,12 @@ export function CreateAdModal({ isOpen, onClose, defaultAppId }: CreateAdModalPr
               <div className="w-full flex flex-col items-center space-y-4">
                 <div className="max-w-full overflow-hidden rounded-xl border shadow-xl">
                   <AdCanvas
-                    result={adResult}
+                    brief={adResult.brief}
+                    palette={adResult.palette}
+                    width={adResult.format.width}
+                    height={adResult.format.height}
+                    imageDataUri={adResult.image.dataUri}
+                    appName={adResult.app.name}
                     onReady={(canvas) => {
                       canvasRef.current = canvas;
                     }}

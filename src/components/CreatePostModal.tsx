@@ -116,7 +116,7 @@ export function CreatePostModal({ isOpen, onClose, appId, appName }: CreatePostM
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-5">
+        <form onSubmit={handleSubmit} id="create-post-form" className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Quick Preset Chips */}
           <div>
             <div className="flex items-center justify-between">
@@ -265,8 +265,8 @@ export function CreatePostModal({ isOpen, onClose, appId, appName }: CreatePostM
               Cancel
             </button>
             <button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
+              form="create-post-form"
               disabled={trackEventMutation.isPending}
               className="ap-press inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50"
             >

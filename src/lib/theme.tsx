@@ -11,38 +11,45 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+/** Apply the class to <html> and <body> immediately — no batching. */
+function applyThemeToDom(theme: Theme) {
+  if (typeof document === "undefined") return;
+  const isDark = theme === "dark";
+  document.documentElement.classList.toggle("dark", isDark);
+  document.body.classList.toggle("dark", isDark);
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "light";
+  const [theme, setThemeState] = useState<Theme>("light");
+
+  // On first mount: read persisted preference or system preference, then apply.
+  useEffect(() => {
     const stored = localStorage.getItem("ap-theme") as Theme | null;
-    if (stored === "dark" || stored === "light") return stored;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  });
+    const preferred =
+      stored === "dark" || stored === "light"
+        ? stored
+        : window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+    setThemeState(preferred);
+    applyThemeToDom(preferred);
+  }, []);
 
   const isDark = theme === "dark";
 
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    const root = document.documentElement;
-    const body = document.body;
-
-    if (isDark) {
-      root.classList.add("dark");
-      body.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-      body.classList.remove("dark");
-    }
-
-    localStorage.setItem("ap-theme", theme);
-  }, [theme, isDark]);
-
   const toggleTheme = () => {
-    setThemeState((prev) => (prev === "dark" ? "light" : "dark"));
+    setThemeState((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      applyThemeToDom(next);
+      localStorage.setItem("ap-theme", next);
+      return next;
+    });
   };
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
+    applyThemeToDom(newTheme);
+    localStorage.setItem("ap-theme", newTheme);
   };
 
   return (
@@ -55,7 +62,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {
-    // Graceful fallback if outside provider
     return {
       theme: "light" as Theme,
       isDark: false,
