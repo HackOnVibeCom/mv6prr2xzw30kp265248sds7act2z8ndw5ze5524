@@ -1,235 +1,239 @@
-# ⚡ AutoPromo SDK
-
 <div align="center">
 
-![AutoPromo Banner](https://img.shields.io/badge/AutoPromo-SDK_v0.4.1-10B981?style=for-the-badge&logo=rocket&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![React 19](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=for-the-badge&logo=openai&logoColor=white)
-![Google Gemini](https://img.shields.io/badge/Google_Gemini-Imagen_3-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+```
+  █████╗ ██╗   ██╗████████╗██████╗ ██████╗ ██╗    ██╗███████╗██████╗ 
+ ██╔══██╗██║   ██║╚══██╔══╝██╔══██╗██╔══██╗██║    ██║██╔════╝██╔══██╗
+ ███████║██║   ██║   ██║   ██████╔╝██████╔╝██║ █╗ ██║█████╗  ██████╔╝
+ ██╔══██║██║   ██║   ██║   ██╔═══╝ ██╔══██╗██║███╗██║██╔══╝  ██╔══██╗
+ ██║  ██║╚██████╔╝   ██║   ██║     ██║  ██║╚███╔███╔╝███████╗██████╔╝
+ ╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚═╝     ╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚═════╝ 
+```
 
-**The AI-Driven Promotion Layer for Mobile & Web Applications**  
-*Turn real product moments into high-converting social copy, rank variants with an adaptive strategy engine, and publish in 1-tap with Zero ToS Risk.*
+### **THE AUTONOMOUS PROMOTION ENGINE FOR APP DEVELOPERS**
+*Turn Product Moments into High-Converting Social Threads & AI Ad Artwork in 1-Tap*
 
-[Explore Features](#-key-features) • [System Architecture](#-system-architecture) • [SDK Integration](#-3-line-sdk-integration) • [Local Setup](#-local-development) • [API Reference](#-environment--configuration)
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![TypeScript 5.8](https://img.shields.io/badge/TypeScript-5.8-blue.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![React 19](https://img.shields.io/badge/React-19.2-61dafb.svg?style=for-the-badge&logo=react)](https://react.dev/)
+[![OpenAI GPT-4o-mini](https://img.shields.io/badge/OpenAI-GPT--4o--mini-000000.svg?style=for-the-badge&logo=openai)](https://openai.com/)
+[![Google Gemini Imagen 3](https://img.shields.io/badge/Google_Gemini-Imagen_3-8E75B2.svg?style=for-the-badge&logo=googlegemini)](https://aistudio.google.com/)
+[![Supabase Postgres](https://img.shields.io/badge/Supabase-Database-3ECF8E.svg?style=for-the-badge&logo=supabase)](https://supabase.com/)
+[![Express API](https://img.shields.io/badge/Express.js-Backend-000000.svg?style=for-the-badge&logo=express)](https://expressjs.com/)
+
+[🔥 Live Demo Directory](#-live-demo-navigation) • [⚡ 3-Second Executive Summary](#-3-second-executive-summary) • [🏗️ Master System Architecture](#-master-system-architecture) • [🚀 3-Line SDK Integration](#-3-line-sdk-integration) • [🧠 Multi-LLM Fallback Cascade](#-multi-llm-provider-fallback-cascade) • [🎨 Ad & Poster Studio](#-ad--poster-studio) • [⚙️ Setup & Deployment](#-environment--configuration)
 
 </div>
 
 ---
 
-## 📸 Overview & Live Pages
+## ⚡ 3-Second Executive Summary
 
-AutoPromo is a drop-in developer SDK and intelligent analytics dashboard that automatically transforms internal product milestones (app launches, version releases, 5★ user reviews, download goals) into platform-optimized promotional posts and ad artwork.
+Building a great product is only half the battle—**promoting it consistently is where most developers fail.**
 
-### Why AutoPromo?
-* 🛡️ **Zero ToS Risk**: No fragile browser automation or risky unofficial APIs. AutoPromo generates pre-filled native platform intent compose URLs (`twitter.com/intent/tweet`, `wa.me`, `linkedin.com/sharing`). A human always makes the final 1-tap approval.
-* 🧠 **Multi-LLM Provider Engine**: Built-in resilient fallback pipeline favoring **OpenAI `gpt-4o-mini`**, **AgentRouter**, and **Groq `Llama-3.3-70B`**.
-* 🎨 **Ad & Poster Studio**: Integrates **Google Gemini Imagen 3** for AI background artwork and visual poster rendering across 1:1 Square, 16:9 Landscape, and 9:16 Story formats.
-* 📊 **Adaptive Strategy Engine**: Scores post variants continuously based on historical user publishing choices ($\text{Score} = \text{Base Weight} + 0.5 \times \frac{\text{Chosen}}{\text{Shown}}$).
+**AutoPromo SDK** is a lightweight, drop-in promotion layer that listens to key application milestones (product launches, version updates, 5★ reviews, user milestones) and automatically transforms them into viral, platform-native social media threads and AI promotional posters.
 
-### Live Demo Navigation
-
-| Page / Feature | Route Path | Description |
-|---|---|---|
-| **Landing & Pricing** | `/` | Showcase, feature matrix, and sandbox subscription plans |
-| **All Apps Directory** | `/apps` | Multi-app overview and one-click app connection |
-| **App Studio & Feed** | `/apps/:appId` | Live event triggers, ranked posts grid, and ad studio |
-| **Ad & Poster Studio** | `/apps/:appId/ads` | AI image generator & custom poster builder |
-| **Event Variant Detail** | `/apps/:appId/events/:eventId` | Complete breakdown of every variant generated for an event |
-| **Strategy Analytics** | `/analytics` | Platform/Tone performance metrics and ranking breakdown |
-| **Live Terminal Feed** | `/live/:appId` | Dark-mode terminal view for live event streaming |
-| **SDK Documentation** | `/docs` | Interactive SDK test playground and downloadable `sdk.ts` |
-| **Settings & Billing** | `/settings` | App API keys, plan subscription management, and billing receipts |
-| **OG Share Cards** | `/share/:eventId` | OpenGraph preview cards for social link sharing |
+### 🌟 The 4 Pillars of AutoPromo
+1. **🛡️ 100% Zero ToS Risk (1-Tap Human-in-the-Loop)**: Never hands credentials to third-party automation tools or risks account bans. AutoPromo generates pre-filled native platform composition intents (`twitter.com/intent/tweet`, `wa.me`, `linkedin.com/sharing`). A human makes the final 1-tap publish decision.
+2. **🧠 Resilient Multi-LLM Provider Engine**: Features an ironclad sequential fallback cascade: **OpenAI `gpt-4o-mini`** $\rightarrow$ **AgentRouter** $\rightarrow$ **Groq `Llama-3.3-70B`** $\rightarrow$ **Structured Template Fallback**. Post generation *never* crashes or fails.
+3. **🎨 AI Ad & Poster Studio**: Direct integration with **Google Gemini Imagen 3** for generating commercial-grade promotional poster artwork across Square (1:1), Landscape (16:9), and Story (9:16) formats.
+4. **📊 Adaptive Strategy Engine**: A continuous feedback loop that ranks promotional copy based on actual historical publishing choices:
+$$\text{Score} = w_{\text{base}}(\text{Event}, \text{Platform}) + 0.5 \times \left( \frac{\text{Times Chosen}}{\text{Times Shown} + 1} \right)$$
 
 ---
 
-## 🏗️ System Architecture
+## 🔥 Live Demo Navigation
 
-AutoPromo operates across four decoupled layers: the host application (Mobile/Web), the client SDK, the resilient Express API backend, and the TanStack Start React dashboard.
+The AutoPromo workspace provides a full suite of interactive tools, live dashboards, and developer sandboxes:
 
-### 1. High-Level Architecture Flow
+```
+http://localhost:8080/ (Dashboard Frontend)
+http://localhost:3001/ (Express Backend API)
+```
+
+| Route Path | Screen / Feature | Key Functionality |
+|---|---|---|
+| `/` | **Landing & Showcase** | Interactive feature tour, platform matrix, & sandbox billing preview |
+| `/apps` | **Apps Directory** | Overview of all connected apps with real-time status indicators |
+| `/apps/:appId` | **App Studio & Feed** | Live SDK event trigger buttons, ranked posts grid, & platform filters |
+| `/apps/:appId/ads` | **Ad & Poster Studio** | AI background artwork generator, palette selector, & multi-ratio export |
+| `/apps/:appId/events/:eventId` | **Event Deep-Dive** | Complete breakdown of all 12 copy variants generated for a single event |
+| `/analytics` | **Strategy Analytics** | Global performance metrics, platform win rates, & ranking weight graphs |
+| `/live/:appId` | **Terminal Live Feed** | Dark-mode developer terminal streaming live SDK event broadcasts |
+| `/docs` | **SDK Integration Guide** | Interactive test playground, code snippets, & 1-click `sdk.ts` download |
+| `/settings` | **Settings & Billing** | App SDK API keys, subscription management, plan upgrade/cancel, & receipts |
+| `/share/:eventId` | **OG Share Preview** | Dynamic OpenGraph preview cards tailored for LinkedIn & Facebook sharing |
+
+---
+
+## 🏗️ Master System Architecture
+
+AutoPromo bridges mobile/web applications, distributed AI providers, database persistence, and native mobile composition handlers.
+
+### 1. Complete End-to-End Telemetry Pipeline
 
 ```mermaid
-flowchart TD
-    subgraph HostApp ["📱 Host Application (iOS / Android / Web)"]
-        SDK["@autopromo/sdk"]
-        Trigger["AutoPromo.track('milestone', { count: 1000 })"]
+graph TD
+    subgraph Host_App ["📱 Mobile / Web Host Application"]
+        A[App Event Occurs: e.g. 10k Downloads] --> B["AutoPromo.trackMilestone({ count: 10000 })"]
+        B --> C["@autopromo/sdk HTTP Client"]
     end
 
-    subgraph Backend ["⚡ AutoPromo Express API (Port 3001)"]
-        API["POST /api/event"]
-        Router["Multi-LLM Provider Router"]
+    subgraph Backend_Server ["⚡ AutoPromo Backend Server (Node.js / Express - Port 3001)"]
+        C -->|POST /api/event| D["API Event Controller"]
+        D --> E{"App Context Lookup"}
+        E -->|DB Match| F["Supabase Apps Table"]
+        E -->|Seed / Demo App| G["Dynamic App Context Generator"]
         
-        subgraph AI_Providers ["🧠 LLM Engine"]
-            OpenAI["1. OpenAI (gpt-4o-mini)"]
-            AgentRouter["2. AgentRouter"]
-            Groq["3. Groq (Llama-3.3-70B)"]
-            Fallback["4. Built-in Structured Copy Generator"]
+        F --> H["Prompt Construction Engine"]
+        G --> H
+
+        subgraph AI_Cascade ["🧠 Multi-LLM Provider Router"]
+            H -->|Priority 1| I["OpenAI API (gpt-4o-mini)"]
+            I -- 401 / Timeout --> J["AgentRouter API"]
+            J -- Error --> K["Groq API (Llama-3.3-70B)"]
+            K -- Error --> L["Structured Copy Fallback Engine"]
         end
 
-        subgraph Image_Engine ["🎨 Ad Poster Engine"]
-            Gemini["Google Gemini (Imagen 3)"]
-            Canvas["Styled SVG Canvas Layouts"]
+        I --> M["JSON Response Parser & Cleaner"]
+        J --> M
+        K --> M
+        L --> M
+
+        M --> N["Strategy Engine Scoring Calculator"]
+
+        subgraph Persistence ["💾 Hybrid Persistence Layer"]
+            N --> O["Supabase Postgres DB (events, generated_posts)"]
+            N --> P["In-Memory High-Speed Cache"]
         end
 
-        Strategy["Adaptive Strategy Scoring Engine"]
+        N --> Q["Discord Webhook Broadcaster"]
     end
 
-    subgraph Storage ["💾 Data & Messaging"]
-        SupaDB[("Supabase Postgres + Realtime")]
-        MemStore[("In-Memory Post Cache")]
-        Discord["Discord Webhook Alert"]
+    subgraph Client_Dashboard ["📊 TanStack React Dashboard (Port 8080)"]
+        P --> R["Instant QueryCache Sync (React Query)"]
+        O --> R
+        R --> S["Ranked Social Copy Cards"]
+        S --> T{"User Clicks 'Publish'"}
+        T -->|Twitter / X| U["twitter.com/intent/tweet"]
+        T -->|LinkedIn| V["linkedin.com/sharing/share-offsite"]
+        T -->|Reddit| W["reddit.com/submit"]
+        T -->|WhatsApp| X["wa.me/?text="]
+        T -->|Telegram| Y["t.me/share/url"]
+        T -->|Facebook| Z["facebook.com/sharer/sharer.php"]
     end
-
-    subgraph Dashboard ["📊 AutoPromo Dashboard (Port 8080)"]
-        UI["TanStack React Dashboard"]
-        QueryCache["TanStack Query Cache"]
-        Intent["1-Tap Native Intent Composers"]
-    end
-
-    Trigger --> SDK
-    SDK -->|HTTPS POST| API
-    API --> Router
-    Router --> OpenAI
-    OpenAI -- Fallback if fail --> AgentRouter
-    AgentRouter -- Fallback if fail --> Groq
-    Groq -- Fallback if fail --> Fallback
-    
-    Router --> Strategy
-    Strategy --> SupaDB
-    Strategy --> MemStore
-    API --> Discord
-
-    UI -->|Realtime Query / Sync| QueryCache
-    QueryCache <--> MemStore
-    QueryCache <--> SupaDB
-    UI --> Intent
 ```
 
 ---
 
-### 2. Multi-LLM Provider Fallback Pipeline
+### 2. Ad & Poster Studio Generation Pipeline
 
-AutoPromo guarantees 100% uptime for post generation by implementing a sequential fallback cascade across LLM providers:
+```mermaid
+flowchart LR
+    subgraph User_Input ["🎨 User Prompt & Controls"]
+        P1["App Context"] --> B1["Prompt & Headline Brief"]
+        P2["Format Selector"] --> B2["Aspect Ratio (1:1 / 16:9 / 9:16)"]
+        P3["Gemini API Key"] --> B3["Client / Server Key Resolver"]
+    end
+
+    subgraph Generation_Engine ["⚡ Artwork Generation Engine"]
+        B1 & B2 & B3 --> G1["Google Gemini Imagen 3 API"]
+        G1 --> G2{"Generation Status"}
+        G2 -->|Success| G3["Base64 / Data URI Image Stream"]
+        G2 -->|Fallback / No Key| G4["Dynamic HSL Gradient Canvas"]
+    end
+
+    subgraph Renderer ["🖼️ HTML5 Canvas Composite Renderer"]
+        G3 & G4 --> R1["AdCanvas Component"]
+        R1 --> R2["Inject Headline + Subhead + Badge"]
+        R1 --> R3["Apply Typography Scale & Drop Shadows"]
+        R3 --> R4["PNG / JPEG Downloadable Asset"]
+    end
+```
+
+---
+
+## 🧠 Multi-LLM Provider Fallback Cascade
+
+To ensure absolute reliability during high-traffic launches or live hackathon demonstrations, AutoPromo never relies on a single AI provider.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Developer
-    participant SDK as AutoPromo SDK
-    participant Server as Express Server
-    participant OpenAI as OpenAI API
+    participant App as Mobile App SDK
+    participant Server as Express Backend
+    participant OpenAI as OpenAI (gpt-4o-mini)
     participant AgentRouter as AgentRouter API
-    participant Groq as Groq API
-    participant Strategy as Strategy Engine
-    participant UI as Dashboard
+    participant Groq as Groq (Llama 3.3)
+    participant Cache as Memory / DB Store
 
-    Developer->>SDK: AutoPromo.trackVersion({ version: "2.0" })
-    SDK->>Server: POST /api/event
-    Server->>OpenAI: Request JSON Chat Completion (gpt-4o-mini)
+    App->>Server: POST /api/event { type: "launch" }
     
-    alt OpenAI Success (200 OK)
-        OpenAI-->>Server: Return Structured JSON Posts
-    else OpenAI Error / 401 / Timeout
-        Server->>AgentRouter: Request JSON Chat Completion
-        alt AgentRouter Success
-            AgentRouter-->>Server: Return Structured JSON Posts
-        else AgentRouter Error
-            Server->>Groq: Request JSON Chat Completion (Llama-3.3-70B)
-            alt Groq Success
-                Groq-->>Server: Return Structured JSON Posts
-            else All APIs Unavailable
-                Server-->>Server: Use Local Template Generator
-            end
+    rect rgb(20, 40, 30)
+        Note over Server,OpenAI: Attempt 1: OpenAI GPT-4o-mini
+        Server->>OpenAI: POST /v1/chat/completions (response_format: json)
+        alt Success (200 OK)
+            OpenAI-->>Server: Return Structured JSON Copy
+        else Error 401 / 429 / 500
+            OpenAI-->>Server: Error Response
         end
     end
 
-    Server->>Strategy: Calculate Rank Scores
-    Server->>Server: Store in Memory & Supabase
-    Server-->>SDK: Return { ok: true, posts: [...] }
-    Server-->>UI: Instant QueryCache Sync
+    rect rgb(40, 30, 20)
+        Note over Server,AgentRouter: Attempt 2: AgentRouter Backup
+        alt OpenAI Failed
+            Server->>AgentRouter: POST /v1/chat/completions
+            AgentRouter-->>Server: Return Copy JSON
+        end
+    end
+
+    rect rgb(30, 20, 40)
+        Note over Server,Groq: Attempt 3: Groq Llama 3.3 70B
+        alt AgentRouter Failed
+            Server->>Groq: POST /v1/chat/completions
+            Groq-->>Server: Return Copy JSON
+        end
+    end
+
+    rect rgb(20, 20, 20)
+        Note over Server,Cache: Attempt 4: Local Template Generator
+        alt All LLMs Failed
+            Server->>Server: Execute generateFallbackPosts()
+        end
+    end
+
+    Server->>Cache: Save & Score Posts
+    Server-->>App: HTTP 200 OK { ok: true, posts: [...] }
 ```
 
 ---
 
-### 3. Strategy Engine Formula
-
-Every generated post variant receives a dynamic ranking score computed by the Strategy Engine:
-
-$$\text{Score} = \text{BaseWeight}(\text{Event}, \text{Platform}) + 0.5 \times \left( \frac{\text{Times Chosen}}{\text{Times Shown} + 1} \right)$$
-
-```mermaid
-gantt
-    title Strategy Engine Score Weights Distribution
-    dateFormat X
-    axisFormat %s
-    
-    section Starting Base Weight
-    Twitter Base        :0, 90
-    LinkedIn Base       :0, 85
-    Reddit Base         :0, 80
-    WhatsApp Base       :0, 75
-    
-    section Human Engagement Boost
-    User Clicks "Publish":90, 140
-```
-
----
-
-## ✨ Key Features
-
-### 🚀 1. 3-Line SDK Integration
-Drop `@autopromo/sdk` into any React, React Native, Expo, Node.js, or HTML web app. SDK calls are asynchronous and fail-safe—they will never block or crash the host application.
-
-### 🤖 2. Multi-LLM Copy Generation
-Generates platform-tailored promotional copy for **Twitter/X**, **LinkedIn**, **Reddit**, **WhatsApp**, **Telegram**, and **Facebook** in two tones (**Casual & Viral** vs **Professional & Clear**).
-
-### 🖼️ 3. AI Ad & Poster Studio
-Uses **Google Gemini Imagen 3** to render high-resolution promotional artwork. Customize text briefs, badge accents, vibe palettes, and export in **Square (1:1)**, **Landscape (16:9)**, or **Story (9:16)** formats.
-
-### 🛡️ 4. 1-Tap Human-in-the-Loop Compose Intents
-Generates native platform deep links so developers can review, edit, and publish with a single click:
-* **Twitter/X**: `twitter.com/intent/tweet?text=...`
-* **LinkedIn**: `linkedin.com/sharing/share-offsite/?url=...`
-* **Reddit**: `reddit.com/submit?title=...&text=...`
-* **WhatsApp**: `wa.me/?text=...`
-* **Telegram**: `t.me/share/url?url=...&text=...`
-* **Facebook**: `facebook.com/sharer/sharer.php?u=...`
-
-### 📢 5. Discord Webhook Broadcaster
-Optionally broadcasts every new event and AI-generated social thread to your team's Discord channel instantly.
-
----
-
-## 📦 3-Line SDK Integration
+## 🚀 3-Line SDK Integration
 
 ### 1. Installation
 ```bash
 npm install @autopromo/sdk
 ```
 
-### 2. Initialize
+### 2. Initialize in Host App
 ```typescript
 import { AutoPromo } from "@autopromo/sdk";
 
 AutoPromo.init({
-  appId: "ap_live_2b81ef40c7aa", // From AutoPromo Dashboard -> Settings
-  apiUrl: "http://localhost:3001", // Or your production backend URL
+  appId: "ap_live_2b81ef40c7aa",   // Generated in Dashboard -> Settings
+  apiUrl: "http://localhost:3001", // AutoPromo Backend Server URL
   appUrl: "https://focustimer.app",
 });
 ```
 
-### 3. Track Product Moments
+### 3. Emit Real Product Moments
 ```typescript
 // 🚀 Major Product Release
 await AutoPromo.trackVersion({
   build: "v2.0.0",
-  notes: "Added Dark Mode and 50% faster export speeds!",
+  notes: "Shipped Dark Mode, 50% faster export speeds, and cloud sync!",
 });
 
-// ⚡ Milestone Reached
+// ⚡ Milestone Achieved
 await AutoPromo.trackMilestone({
   label: "10,000 Active Users",
   count: 10000,
@@ -238,79 +242,84 @@ await AutoPromo.trackMilestone({
 // ⭐ 5-Star Review Highlight
 await AutoPromo.trackReview({
   rating: 5,
-  author: "Sarah M.",
-  text: "The best productivity app I've used this year!",
+  author: "Alex R.",
+  text: "The best focus timer app I've used this year!",
 });
 
-// 🎯 Fetch & Publish Top Ranked Post
-const { posts } = await AutoPromo.trackEvent("launch");
-if (posts && posts.length > 0) {
-  await AutoPromo.openShareSheet(posts[0].content);
+// 🎯 Immediate 1-Tap Share Sheet Trigger
+const result = await AutoPromo.trackEvent("launch");
+if (result.posts && result.posts.length > 0) {
+  await AutoPromo.openShareSheet(result.posts[0].content);
 }
 ```
 
 ---
 
-## 🛠️ Supported Platforms & Intent Mapping
+## 🌐 Supported Social Platforms & Deep Link Matrix
 
-| Platform | Composition Strategy | Primary Intent Target |
+AutoPromo formats every post specifically for the character limits, line breaks, hashtag rules, and tone expectations of each social network:
+
+| Platform | Native Intent Builder Format | Features Supported |
 |---|---|---|
-| **Twitter / X** | Web Intent Deep Link | `https://twitter.com/intent/tweet?text={content}` |
-| **LinkedIn** | OG Share Card Integration | `https://www.linkedin.com/sharing/share-offsite/?url={sharePage}` |
-| **Reddit** | Text / Link Submission | `https://www.reddit.com/submit?title={title}&text={body}` |
-| **WhatsApp** | Native Share Sheet / Deep Link | `https://wa.me/?text={content}` |
-| **Telegram** | Instant Share URL | `https://t.me/share/url?url={link}&text={content}` |
-| **Facebook** | Sharer Dialog + OG Meta | `https://www.facebook.com/sharer/sharer.php?u={sharePage}` |
+| **Twitter / X** | `https://twitter.com/intent/tweet?text={text}` | Auto-hashtag extraction, 280-char limit |
+| **LinkedIn** | `https://www.linkedin.com/sharing/share-offsite/?url={shareUrl}` | Professional copy, headline, OG preview card |
+| **Reddit** | `https://www.reddit.com/submit?title={title}&text={body}` | Markdown formatting, r/SideProject friendly copy |
+| **WhatsApp** | `https://wa.me/?text={encodedText}` | Direct mobile app deep-linking & group broadcast |
+| **Telegram** | `https://t.me/share/url?url={url}&text={text}` | Channel broadcast formatting & emoji styling |
+| **Facebook** | `https://www.facebook.com/sharer/sharer.php?u={shareUrl}` | Community post layout & link previews |
+
+---
+
+## 🎨 Ad & Poster Studio
+
+The **Ad & Poster Studio** (`/apps/:appId/ads`) allows developers and indie hackers to generate high-converting promotional banners in seconds:
+
+* 🖼️ **Google Gemini Imagen 3 Integration**: Generates commercial background imagery based on your prompt.
+* 🎨 **Dynamic Palette Styling**: Choose between *Dark Modern*, *Neon Cyber*, *Minimalist Light*, or *Vibrant Gradient* themes.
+* 📐 **Multi-Aspect Ratio Canvas**:
+  * **Square (1:1)** — `1080 × 1080` (Instagram, Twitter, LinkedIn)
+  * **Landscape (16:9)** — `1200 × 630` (Facebook, Web Banners, ProductHunt)
+  * **Story (9:16)** — `1080 × 1920` (Instagram Stories, TikTok, Mobile Reels)
+* 💾 **1-Click High-Res PNG Export**: Rendered directly in-browser using HTML5 Canvas.
 
 ---
 
 ## ⚙️ Environment & Configuration
 
-All sensitive secrets live exclusively in `server/.env` and are **never** exposed to the frontend bundle.
+All secret credentials live exclusively in `server/.env` and are **never** bundled into public frontend code.
 
-### `server/.env` Setup
+### `server/.env` Specification
 
 ```bash
 cd server
 cp .env.example .env
 ```
 
-| Variable | Required | Description | Example / Source |
+| Variable | Type | Description | Where to Obtain |
 |---|---|---|---|
-| `OPENAI_API_KEY` | Optional | Primary OpenAI API Key for GPT-4o-mini | `sk-proj-...` ([platform.openai.com](https://platform.openai.com)) |
-| `AGENTROUTER_API_KEY` | Optional | Secondary LLM provider key | `sk-QI5...` ([agentrouter.org](https://agentrouter.org)) |
-| `GROQ_API_KEY` | Optional | Groq Llama-3.3-70B API key | `gsk_...` ([console.groq.com](https://console.groq.com)) |
-| `GEMINI_API_KEY` | Optional | Google Gemini key for Imagen 3 poster generation | `AIzaSy...` ([aistudio.google.com](https://aistudio.google.com)) |
-| `NEXT_PUBLIC_SUPABASE_URL` | **Required** | Supabase project URL | `https://<id>.supabase.co` |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Required** | Supabase `service_role` secret key | `eyJhbG...` (Supabase Dashboard -> API) |
-| `DISCORD_WEBHOOK_URL` | Optional | Discord channel webhook for auto-posting | `https://discord.com/api/webhooks/...` |
-| `PORT` | Optional | Express server port (Default: `3001`) | `3001` |
-| `FRONTEND_URL` | Optional | Dashboard origin URL for CORS | `http://localhost:8080` |
+| `OPENAI_API_KEY` | Secret | **Primary LLM Key** for GPT-4o-mini copy generation | [platform.openai.com](https://platform.openai.com) |
+| `AGENTROUTER_API_KEY` | Secret | Backup LLM provider key | [agentrouter.org](https://agentrouter.org) |
+| `GROQ_API_KEY` | Secret | Groq Llama-3.3-70B provider key | [console.groq.com](https://console.groq.com) |
+| `GEMINI_API_KEY` | Secret | Google Gemini Imagen 3 key for poster artwork | [aistudio.google.com](https://aistudio.google.com) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Public | Supabase project URL | Supabase Dashboard $\rightarrow$ Settings $\rightarrow$ API |
+| `SUPABASE_SERVICE_ROLE_KEY` | Secret | Supabase `service_role` secret (bypasses RLS) | Supabase Dashboard $\rightarrow$ Settings $\rightarrow$ API |
+| `DISCORD_WEBHOOK_URL` | Secret | Discord channel webhook URL for auto-posting | Discord Channel Settings $\rightarrow$ Integrations |
+| `PORT` | Public | Express backend port (Default: `3001`) | `3001` |
+| `FRONTEND_URL` | Public | Dashboard URL for CORS configuration | `http://localhost:8080` |
 
 ---
 
-## 🚀 Local Development Guide
-
-The workspace is organized into four main packages:
-
-```
-AutoPromo-SDK/
-├── src/                    # Frontend Dashboard (TanStack Start + React 19 + Tailwind v4)
-├── server/                 # Express API Server (Node.js + Supabase + LLM Router)
-├── packages/autopromo-sdk/ # NPM Package source code (@autopromo/sdk)
-└── autopromo-demo/         # React Native / Expo mobile demonstration app
-```
+## 🛠️ Complete Workspace Setup Guide
 
 ### 1. Launch Express Backend Server (Port 3001)
 
 ```bash
 cd server
 npm install
-cp .env.example .env
+cp .env.example .env     # Fill in your API keys
 npm run dev
 ```
-
-Verify backend health at: `http://localhost:3001/health`
+*Health Check*: Verify at `http://localhost:3001/health`
 
 ### 2. Launch Dashboard Frontend (Port 8080)
 
@@ -320,10 +329,9 @@ In a new terminal window:
 npm install
 npm run dev
 ```
+*Dashboard*: Access at `http://localhost:8080`
 
-Open dashboard at: `http://localhost:8080`
-
-### 3. Build SDK Package
+### 3. Build SDK Package (`@autopromo/sdk`)
 
 ```bash
 cd packages/autopromo-sdk
@@ -331,30 +339,31 @@ npm install
 npm run build
 ```
 
-### 4. Run Mobile Demo (Expo)
+### 4. Launch Expo Mobile Demo App
 
 ```bash
 cd autopromo-demo
 npm install
 npx expo start
 ```
+*Scan the QR code with Expo Go on iOS or Android.*
 
 ---
 
-## 💳 Business Model & Pricing Tiers
+## 💳 Sandbox Subscription Plans
 
-| Feature | Free Sandbox | Builder Pro ($12/mo) | Agency ($39/mo) |
+| Feature / Limit | Free Sandbox | Builder Pro ($12/mo) | Agency ($39/mo) |
 |---|---|---|---|
-| **Monthly AI Posts** | 20 posts | 200 posts | **Unlimited** |
+| **Monthly AI Posts** | 20 posts / mo | 200 posts / mo | **Unlimited** |
 | **Connected Apps** | 1 app | 3 apps | **Unlimited** |
-| **LLM Provider Engine** | Standard | Priority Queue | Priority Queue |
-| **Ad & Poster Studio** | Canvas Layouts | Gemini Imagen 3 | Gemini Imagen 3 + Custom Themes |
-| **Analytics & Export** | Dashboard | Full Insights | **White-Label PDF & CSV Export** |
+| **LLM Provider Priority** | Standard | Priority Queue | Priority Queue |
+| **Ad Poster Studio** | Canvas Layouts | Gemini Imagen 3 | Custom Theme Builder |
+| **Analytics & Export** | Basic | Strategy Engine | **White-Label PDF & CSV** |
 
 ---
 
-## 📄 License & Credits
+## 📄 License & Team Credits
 
-* **Event / Hackathon**: HackOnVibe 2026
-* **Team**: AutoPromo Core Team
-* **Framework**: Built with TanStack Start, React 19, Express, Tailwind CSS, Supabase, OpenAI, and Google Gemini.
+* **Hackathon**: [HackOnVibe 2026](https://hackonvibe.com)
+* **License**: MIT Open Source License
+* **Core Stack**: TanStack Start, React 19, TypeScript, Tailwind CSS v4, Express.js, Supabase, OpenAI, Google Gemini, Groq.
