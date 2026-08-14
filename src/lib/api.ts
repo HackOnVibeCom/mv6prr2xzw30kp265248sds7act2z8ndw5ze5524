@@ -144,6 +144,7 @@ export interface TrackEventResult {
   eventId?: string;
   generated?: number;
   replyDraft?: string;
+  posts?: ApiPost[];
 }
 
 export function trackEvent(body: {

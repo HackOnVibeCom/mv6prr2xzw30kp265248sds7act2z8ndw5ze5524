@@ -5,6 +5,7 @@ import { computeRankScore } from "../strategy";
 import { buildGenerationPrompt } from "../prompts";
 import { postToDiscord } from "../discord";
 import { generateLlmJsonCompletion } from "../llmProvider";
+import { memoryPostsStore } from "./posts";
 import type {
   TrackEventBody,
   AppRow,
@@ -184,7 +185,8 @@ router.post("/", async (req: Request, res: Response) => {
   const statsRows = (stats ?? []) as PlatformStatRow[];
 
   // ── 5. Score each variant and build insert rows ───────────────────────────
-  const insertRows = groqResult.posts.map((v) => ({
+  const insertRows = groqResult.posts.map((v, idx) => ({
+    id: `post-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
     event_id: eventId,
     app_id: appId,
     platform: v.platform as Platform,
@@ -193,7 +195,11 @@ router.post("/", async (req: Request, res: Response) => {
     link_title: v.link_title ?? null,
     rank_score: computeRankScore(type, v.platform as Platform, v.tone as Tone, statsRows),
     chosen: false,
+    created_at: new Date().toISOString(),
   }));
+
+  // Store in memory for instant retrieval & seed apps
+  memoryPostsStore[appId] = [...insertRows, ...(memoryPostsStore[appId] || [])];
 
   const { error: insertErr } = await supabase.from("generated_posts").insert(insertRows);
   if (insertErr) {
@@ -247,6 +253,7 @@ router.post("/", async (req: Request, res: Response) => {
     ok: true,
     eventId: eventId,
     generated: insertRows.length,
+    posts: insertRows,
     ...(replyDraft ? { replyDraft } : {}),
   });
 });

@@ -172,7 +172,27 @@ export function useTrackEvent(appId: string) {
         return await AutoPromo.trackEvent(vars.type as any, vars.payload);
       }
     },
-    onSuccess: () => {
+    onSuccess: (res, vars) => {
+      if (res && Array.isArray((res as any).posts) && (res as any).posts.length > 0) {
+        const rawPosts = (res as any).posts;
+        const newPosts: Post[] = rawPosts.map((p: any) =>
+          p.score !== undefined ? p : toDisplayPost(p, vars.type)
+        );
+        qc.setQueryData<Sourced<Post[]>>(queryKeys.posts(appId), (old) => {
+          const current = old?.data ?? [];
+          const combined = [...newPosts, ...current];
+          const uniqueMap = new Map<string, Post>();
+          for (const post of combined) {
+            const key = post.id || `${post.platform}-${post.content.slice(0, 30)}`;
+            if (!uniqueMap.has(key)) {
+              uniqueMap.set(key, post);
+            }
+          }
+          const unique = Array.from(uniqueMap.values());
+          unique.sort((a, b) => b.score - a.score);
+          return { data: unique, isFallback: false };
+        });
+      }
       void qc.invalidateQueries({ queryKey: queryKeys.posts(appId) });
       void qc.invalidateQueries({ queryKey: queryKeys.app(appId) });
     },

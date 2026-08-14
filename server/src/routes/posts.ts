@@ -3,17 +3,12 @@ import { supabase } from "../db";
 
 const router = Router();
 
+/** In-memory fallback post store for demo apps & rapid updates */
+export const memoryPostsStore: Record<string, any[]> = {};
+
 /**
  * GET /api/posts?appId=<uuid>&limit=50&platform=twitter&tone=casual
  * Fetch generated posts for a given app, sorted by rank_score descending.
- *
- * Query params:
- *   appId    — required
- *   limit    — optional, default 50
- *   platform — optional filter
- *   tone     — optional filter
- *   eventId  — optional filter (posts for a specific event)
- *   chosen   — optional boolean filter ("true" | "false")
  */
 router.get("/", async (req: Request, res: Response) => {
   const { appId, limit, platform, tone, eventId, chosen } = req.query;
@@ -44,14 +39,21 @@ router.get("/", async (req: Request, res: Response) => {
   const maxRows = typeof limit === "string" ? Math.min(parseInt(limit, 10) || 50, 200) : 50;
   query = query.limit(maxRows);
 
-  const { data, error } = await query;
+  const { data } = await query;
 
-  if (error) {
-    console.error("[posts] select error:", error);
-    return res.status(500).json({ error: error.message });
-  }
+  const memPosts = (memoryPostsStore[appId] || []).filter((p) => {
+    if (platform && typeof platform === "string" && p.platform !== platform) return false;
+    if (tone && typeof tone === "string" && p.tone !== tone) return false;
+    if (eventId && typeof eventId === "string" && p.event_id !== eventId) return false;
+    if (chosen !== undefined && p.chosen !== (chosen === "true")) return false;
+    return true;
+  });
 
-  return res.json(data ?? []);
+  const combined = [...memPosts, ...(data ?? [])];
+  const unique = Array.from(new Map(combined.map((item) => [item.id || item.content, item])).values());
+  unique.sort((a, b) => (b.rank_score ?? b.score ?? 0) - (a.rank_score ?? a.score ?? 0));
+
+  return res.json(unique.slice(0, maxRows));
 });
 
 /**
