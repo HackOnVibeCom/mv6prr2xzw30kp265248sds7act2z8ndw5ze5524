@@ -3,7 +3,6 @@
   "name": "autopromo-dashboard",
   "compatibility_date": "2026-08-15",
   "assets": {
-    "directory": "./dist",
-    "binding": "ASSETS"
+    "directory": "./dist"
   }
 }
