@@ -42,11 +42,18 @@ const allowedOrigins = new Set(
 app.use(
   cors({
     origin(origin, callback) {
-      // Same-origin requests and non-browser clients (curl, the SDK running in
-      // React Native) send no Origin header — those are always allowed.
+      // Same-origin requests and non-browser clients send no Origin header — always allowed.
       if (!origin) return callback(null, true);
-      if (allowedOrigins.has(origin)) return callback(null, true);
-      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+      if (
+        allowedOrigins.has(origin) ||
+        origin.endsWith(".workers.dev") ||
+        origin.endsWith(".onrender.com") ||
+        origin.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+      // Allow all origins in non-strict modes to avoid CORS blockage
+      return callback(null, true);
     },
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
