@@ -114,12 +114,14 @@ router.post("/", async (req: Request, res: Response) => {
   }
 
   // ── 1. Fetch app context (with seed app & dynamic fallbacks) ──────────────
-  let app: AppRow | null = null;
+  let app: AppRow;
   const { data: dbApp } = await supabase
     .from("apps")
     .select("*")
     .eq("id", appId)
     .single<AppRow>();
+
+  const rawPayload = (payload || {}) as Record<string, unknown>;
 
   if (dbApp) {
     app = dbApp;
@@ -146,9 +148,9 @@ router.post("/", async (req: Request, res: Response) => {
     const foundSeed = seedApps[appId];
     app = {
       id: appId,
-      name: foundSeed?.name || (payload.appName as string) || appId,
-      tagline: foundSeed?.tagline || "Featured App",
-      description: foundSeed?.description || (payload.prompt as string) || (payload.details as string) || "Modern software app.",
+      name: foundSeed?.name || (rawPayload.appName as string) || appId,
+      description: foundSeed?.description || (rawPayload.prompt as string) || (rawPayload.details as string) || "Modern software app.",
+      created_at: new Date().toISOString(),
     };
   }
 
