@@ -5,6 +5,8 @@
 # AutoPromo SDK
 
 ![Build Status](https://img.shields.io/badge/Build-Passing-10B981?style=for-the-badge&logo=githubactions&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+![Render](https://img.shields.io/badge/Render-Backend-000000?style=for-the-badge&logo=render&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-000000?style=for-the-badge&logo=openai&logoColor=white)
@@ -16,9 +18,18 @@
 
 *Transform application milestones into high-converting social threads and AI artwork via 1-tap human-in-the-loop publishing.*
 
-[Executive Summary](#executive-summary) • [System Architecture](#system-architecture) • [SDK Integration](#sdk-integration) • [Multi-LLM Pipeline](#multi-llm-fallback-pipeline) • [Environment Setup](#environment--configuration)
+[Live Deployment](#live-production-deployments) • [Executive Summary](#executive-summary) • [System Architecture](#system-architecture) • [SDK Integration](#sdk-integration) • [Multi-LLM Pipeline](#multi-llm-fallback-pipeline) • [Environment Setup](#environment--configuration)
 
 </div>
+
+---
+
+## Live Production Deployments
+
+| Layer / Component | Hosting Provider | Live URL | Description |
+|---|---|---|---|
+| **Frontend Dashboard** | Cloudflare Workers / Pages | [https://autopromo-dashboard.kanishjebamathew-m.workers.dev](https://autopromo-dashboard.kanishjebamathew-m.workers.dev) | Production React 19 SPA dashboard with live telemetry and ad studio |
+| **Backend API Server** | Render Web Service | [https://autopromo-dashboard.onrender.com](https://autopromo-dashboard.onrender.com) | Express Node.js backend executing LLM generation, Supabase persistence, & scoring |
 
 ---
 
@@ -113,7 +124,7 @@ import { AutoPromo } from "@autopromo/sdk";
 
 AutoPromo.init({
   appId: "ap_live_2b81ef40c7aa",   // From Dashboard -> Settings
-  apiUrl: "http://localhost:3001", // AutoPromo Express Server URL
+  apiUrl: "https://autopromo-dashboard.onrender.com/api", // Live Render Backend API
   appUrl: "https://focustimer.app",
 });
 ```
@@ -182,7 +193,7 @@ cp .env.example .env
 | `SUPABASE_SERVICE_ROLE_KEY` | Secret | Supabase service_role secret key | Supabase Dashboard |
 | `DISCORD_WEBHOOK_URL` | Secret | Discord channel webhook URL for auto-posting | Discord Settings |
 | `PORT` | Public | Express backend port (Default: `3001`) | `3001` |
-| `FRONTEND_URL` | Public | Dashboard URL for CORS configuration | `http://localhost:8080` |
+| `FRONTEND_URL` | Public | Dashboard URL for CORS configuration | `https://autopromo-dashboard.kanishjebamathew-m.workers.dev` |
 
 ---
 
