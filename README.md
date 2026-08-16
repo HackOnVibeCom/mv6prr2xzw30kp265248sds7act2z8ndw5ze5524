@@ -18,7 +18,7 @@
 
 *Transform application milestones into high-converting social threads and AI artwork via 1-tap human-in-the-loop publishing.*
 
-[Live Deployment](#live-production-deployments) • [Executive Summary](#executive-summary) • [Project Questionnaire](#project-questionnaire) • [System Architecture](#system-architecture) • [SDK Integration](#sdk-integration) • [Multi-LLM Pipeline](#multi-llm-fallback-pipeline) • [Environment Setup](#environment--configuration)
+[Live Deployment](#live-production-deployments) • [Executive Summary](#executive-summary) • [Growth Features](#key-growth-features-payments-downloads-reviews--sales) • [Project Questionnaire](#project-questionnaire) • [System Architecture](#system-architecture) • [SDK Integration](#sdk-integration) • [Multi-LLM Pipeline](#multi-llm-fallback-pipeline) • [Environment Setup](#environment--configuration)
 
 </div>
 
@@ -44,6 +44,15 @@ AutoPromo is a drop-in developer SDK and analytics dashboard that captures key a
 * **Ad and Poster Studio**: Integrates **Google Gemini Imagen 3** for AI background artwork and visual poster rendering across Square (1:1), Landscape (16:9), and Story (9:16) formats.
 * **Adaptive Strategy Engine**: Ranks post variants dynamically based on historical publishing performance:
   $$\text{Score} = w_{\text{base}}(\text{Event}, \text{Platform}) + 0.5 \times \left( \frac{\text{Times Chosen}}{\text{Times Shown} + 1} \right)$$
+
+### Key Growth Features (Payments, Downloads, Reviews, & Sales)
+
+| Feature | Support Status | Capabilities & Implementation |
+|---|:---:|---|
+| 💳 **Pay Money (Payments & Billing)** | **Supported (Sandbox)** | Developer subscription plan management (**Free Sandbox**, **Builder $12/mo**, **Agency $39/mo**) with interactive payment modal and test card checkout (`4242 •••• •••• 4242`) in [`PaymentSandboxModal.tsx`](file:///c:/Users/Admin/Desktop/AutoPromo-SDK/src/components/PaymentSandboxModal.tsx). |
+| 📥 **Receive Downloads** | **Supported** | **Asset/SDK Downloads**: Download AI-generated poster artwork (1:1, 16:9, 9:16) as PNGs in [`apps.$appId.ads.tsx`](file:///c:/Users/Admin/Desktop/AutoPromo-SDK/src/routes/apps.$appId.ads.tsx) and download ready-to-use `sdk.ts` in [`docs.index.tsx`](file:///c:/Users/Admin/Desktop/AutoPromo-SDK/src/routes/docs.index.tsx).<br>**Download Metrics**: Track download milestone goals (`AutoPromo.trackMilestone({ label: "10,000 Downloads", count: 10000 })`). |
+| ⭐️ **Reviews** | **Supported** | **5-Star Store Reviews**: Native `AutoPromo.trackReview({ rating: 5, author, text })` SDK hook in [`index.ts`](file:///c:/Users/Admin/Desktop/AutoPromo-SDK/packages/autopromo-sdk/src/index.ts#L103-L106) that generates promotional social copy highlighting user reviews + auto-drafted review replies. |
+| 📈 **Sales** | **Supported** | **Sales & Revenue Milestones**: Track revenue thresholds and product sales goals via `AutoPromo.trackMilestone()`, with platform performance conversion analytics in the Strategy Engine ([`analytics.index.tsx`](file:///c:/Users/Admin/Desktop/AutoPromo-SDK/src/routes/analytics.index.tsx)). |
 
 ---
 
